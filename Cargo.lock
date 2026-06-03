@@ -68,9 +68,18 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "petgraph",
+ "purrgress-macros",
+]
+
+[[package]]
+name = "purrgress-macros"
+version = "0.2.0"
+dependencies = [
+ "quote",
+ "syn",
 ]
 
 [[package]]

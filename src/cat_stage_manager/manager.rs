@@ -1,34 +1,38 @@
 use petgraph::graph::{DiGraph, NodeIndex};
-use petgraph::visit::{Reversed, Dfs};
 use std::collections::HashMap;
-use std::hash::Hash;
 
 use super::condition::*;
+use super::manager_types::*;
 
 
-pub trait PurrStep: Copy + Clone + PartialEq + Eq + Hash {}
-
-pub enum DuplicatePolicy  {
-    KeepAll,
-    RemoveMatch,
-}
-
-pub enum InsertPosition {
-    Forward,
-    Index(usize)
-}
-
-pub enum PurrEvent<T> {
-    Idle,
-    Running(T),
-    Transition { from: T, to: Option<T> }
-}
-
+#[doc = "## Example of StageManager usage"]
+#[doc = ""]
+#[doc = include_str!("../../examples/basic_test.rs")]
 pub struct StageManager<T: PurrStep> {
-    vector_stage: Vec<T>,
-    graph: DiGraph<T, ()>,
-    nodes: HashMap<T, NodeIndex>,
-    conditions: HashMap<T, Box<dyn PurrCondition>>,
+    pub(crate) vector_stage: Vec<T>,
+    pub(crate) graph: DiGraph<T, ()>,
+    pub(crate) nodes: HashMap<T, NodeIndex>,
+    pub(crate) conditions: HashMap<T, Box<dyn PurrCondition>>,
+    pub(crate) sub_managers: HashMap<usize, Box<StageManager<T>>>,
+}
+
+impl<T> Default for StageManager<T> 
+where 
+    T: PurrStep
+{
+    /// # Example of StageManager create
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// enum MyStage { Idle }
+    /// impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager: manager::StageManager<MyStage> = manager::StageManager::default();
+    /// ```
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 
@@ -36,23 +40,45 @@ impl<T> StageManager<T>
 where 
     T: PurrStep
 {
-     pub fn new() -> Self {
+    /// # Example of StageManager create
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// enum MyStage { Idle }
+    /// impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager: manager::StageManager<MyStage> = manager::StageManager::new();
+    /// ```
+    pub fn new() -> Self {
         Self {
             vector_stage: Vec::new(),
             graph: DiGraph::new(),
             nodes: HashMap::new(),
             conditions: HashMap::new(),
+            sub_managers: HashMap::new(),
         }
     }
 
-    pub fn add_to_graph(&mut self, stage: T){
-        if !self.nodes.contains_key(&stage) {
-            let node_index = self.graph.add_node(stage);
+    /// # Example of StageManager - add_to_graph()
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// enum MyStage { Idle }
+    /// impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// cat_manager.add_to_graph(MyStage::Idle);
+    /// ```
+    pub fn add_to_graph(&mut self, stage: T) {
+        if self.nodes.contains_key(&stage) { return; };
 
-            self.nodes.insert(stage, node_index);
+        let node_index = self.graph.add_node(stage);
 
-            self.set_condition(stage, Box::new(InstantCondition))
-        };
+        self.nodes.insert(stage, node_index);
+
+        self.set_condition(stage, InstantCondition)
     }
 }
 
@@ -61,149 +87,67 @@ impl<T> StageManager<T>
 where 
     T: PurrStep
 {
+    /// # Example of StageManager - update() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// # 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// # 
+    /// # let idle_condition = condition::PurrTimer::new(1.0);
+    /// # cat_manager.set_condition(MyStage::Idle, idle_condition);
+    /// # 
+    /// # cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    ///
+    /// loop {
+    ///     if let Some(timer) = cat_manager.get_condition_mut::<condition::PurrTimer>(MyStage::Idle) {
+    ///         timer.tick(0.1);
+    ///     };
+    /// 
+    ///     match cat_manager.update() {
+    ///         manager_types::PurrEvent::Idle => break,
+    ///         manager_types::PurrEvent::Running(stage) => println!("In progress: {:?}", stage),
+    ///         manager_types::PurrEvent::Transition { from, to } => {
+    ///             println!("Stage {:?} Completed!", from);
+    ///             if let Some(next) = to {
+    ///                 println!("Swap to: {:?}", next);
+    ///             };
+    ///         },
+    ///     };
+    /// }
+    /// ```
     pub fn update(&mut self) -> PurrEvent<T> {
-        let mut ivent = PurrEvent::Idle;
+        let mut event = PurrEvent::Idle;
 
-        if !self.vector_stage.is_empty() {
-            if let Some(conditions) = self.conditions.get_mut(&self.vector_stage[0]) {
-                if conditions.is_finished() {
-                    let running_stage = self.vector_stage[0];
-                    let next_stage = self.vector_stage.get(1).copied();
+        if self.vector_stage.is_empty() { return event; };
 
-                    self.vector_stage.remove(0);
-
-                    if let Some(next) = next_stage {
-                        if let Some(next_condition) = self.conditions.get_mut(&next) {
-                            next_condition.reset();
-                        };
-                    };
-
-                    ivent = PurrEvent::Transition { from: running_stage, to: next_stage }
-                } else {
-                    let running_stage = self.vector_stage[0];
-
-                    ivent = PurrEvent::Running(running_stage)
-                };
-            };
+        let Some(conditions) = self.conditions.get_mut(&self.vector_stage[0]) else { 
+            return event; 
         };
-
-        ivent
-    }
-}
-
-
-impl<T> StageManager<T> 
-where 
-    T: PurrStep
-{
-    pub fn set_condition(&mut self, stage: T, condition: Box<dyn PurrCondition>) {
-        self.conditions.insert(stage, condition);
-    }
-
-    pub fn get_condition<U>(&self, stage: T) -> Option<&U>
-    where 
-        U: 'static
-    {
-        let boxed_condition = self.conditions.get(&stage)?;
-
-        let any = boxed_condition.as_any();
-
-        any.downcast_ref::<U>()
-    }
-
-    pub fn get_condition_mut<U>(&mut self, stage: T) -> Option<&mut U>
-    where 
-        U: 'static
-    {
-        let boxed_condition  = self.conditions.get_mut(&stage)?;
-
-        let any_mut = boxed_condition.as_any_mut();
-
-        any_mut.downcast_mut::<U>()
-    }
-}
-
-
-impl<T> StageManager<T> 
-where 
-    T: PurrStep
-{
-    pub fn add_dependency(&mut self, from: T, to: T) {
-        if let (Some(&from_idx), Some(&to_idx)) = (self.nodes.get(&from), self.nodes.get(&to)) {
-            if !self.graph.contains_edge(from_idx, to_idx) {
-                self.graph.add_edge(from_idx, to_idx, ());
-            }
-        };
-    }
-
-    pub fn push(&mut self, target: T, duplicate_policy: DuplicatePolicy) {
-        let mut new_stages = self.calculate_dependencies(target);
-
-        self.check_duplicate(&mut new_stages, duplicate_policy);
         
-        self.vector_stage.extend(new_stages);
-    }
+        if conditions.is_finished() {
+            let running_stage = self.vector_stage[0];
+            let next_stage = self.vector_stage.get(1).copied();
+            self.vector_stage.remove(0);
 
-    pub fn push_and_delete(&mut self, target: T) {
-        let new_stages = self.calculate_dependencies(target);
+            if let Some(next) = next_stage 
+                && let Some(next_condition) = self.conditions.get_mut(&next) {
+                    next_condition.reset();
+            };
 
-        self.vector_stage = new_stages;
-    }
+            event = PurrEvent::Transition { from: running_stage, to: next_stage }
+        } else {
+            let running_stage = self.vector_stage[0];
 
-    pub fn insert(
-        &mut self,
-        target: T,
-        duplicate_policy: DuplicatePolicy,
-        index: InsertPosition,
-    ) {
-        let mut new_stages = self.calculate_dependencies(target);
-
-        self.check_duplicate(&mut new_stages, duplicate_policy);
-
-        let target_index = match index {
-            InsertPosition::Forward => 0,
-            InsertPosition::Index(idx) => {
-                if idx > self.len_vec_query() {
-                    self.len_vec_query()
-                } else {
-                    idx
-                }
-            },
+            event = PurrEvent::Running(running_stage)
         };
 
-        self.vector_stage.splice(target_index..target_index, new_stages);
-    }
-
-    fn check_duplicate(&self, new_stages: &mut Vec<T>, duplicate_policy: DuplicatePolicy) {
-        match duplicate_policy {
-            DuplicatePolicy::KeepAll => (),
-            DuplicatePolicy::RemoveMatch => {
-                if !new_stages.is_empty() && !self.vector_stage.is_empty() {
-                    if new_stages.first() == self.vector_stage.last() {
-                        new_stages.remove(0);
-                    };
-                };
-            },
-        };
-    }
-
-    fn calculate_dependencies(&self, target: T) -> Vec<T> {
-        let Some(&target_idx) = self.nodes.get(&target) else { return Vec::new();};
-
-        let mut path = Vec::new();
-
-        let reversed_graph = Reversed(&self.graph);
-
-        let mut dfs = Dfs::new(reversed_graph, target_idx);
-
-        while let Some(node_index) = dfs.next(reversed_graph) {
-            let stage = self.graph[node_index];
-
-            path.push(stage);
-        }
-
-        path.reverse();
-        path
+        event
     }
 }
 
@@ -212,11 +156,189 @@ impl<T> StageManager<T>
 where 
     T: PurrStep
 {
-    pub fn len_vec_query(&self) -> usize {
-        self.vector_stage.len()
+    /// # Example of StageManager - current_vec_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    ///
+    /// let mut cat_manager = manager::StageManager::new();
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// let current_vec_query = cat_manager.current_vec_query();
+    /// 
+    /// println!("{:?}", current_vec_query);
+    /// ```
+    pub fn current_vec_query(&self) -> &[T] {
+        &self.vector_stage
     }
 
-    pub fn current_vec_query(&self) -> Vec<T> {
-        self.vector_stage.clone()
+    /// # Example of StageManager - len_vec_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// let len_vec_query = cat_manager.len_vec_query();
+    /// 
+    /// println!("{:?}", len_vec_query);
+    /// ```
+    pub fn len_vec_query(&self) -> usize {
+        self.current_vec_query().len()
+    }
+
+    /// # Example of StageManager - query_is_empty() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// if cat_manager.query_is_empty() {
+    ///     println!("{:?}", MyStage::Idle);
+    /// };
+    /// ```
+    pub fn query_is_empty(&self) -> bool {
+        self.current_vec_query().is_empty()
+    }
+
+    /// # Example of StageManager - first_vec_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// let first_vec_query = cat_manager.first_vec_query();
+    /// 
+    /// println!("{:?}", first_vec_query);
+    /// ```
+    pub fn first_vec_query(&self) -> Option<&T> {
+        self.current_vec_query().first()
+    }
+
+    /// # Example of StageManager - last_vec_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// let last_vec_query = cat_manager.last_vec_query();
+    /// 
+    /// println!("{:?}", last_vec_query);
+    /// ```
+    pub fn last_vec_query(&self) -> Option<&T> {
+        self.current_vec_query().last()
+    }
+
+    /// # Example of StageManager - next_vec_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// let next_vec_query = cat_manager.next_vec_query();
+    /// 
+    /// println!("{:?}", next_vec_query);
+    /// ```
+    pub fn next_vec_query(&self) -> Option<&T> {
+        self.current_vec_query().get(1)
+    }
+
+    /// # Example of StageManager - contains_stage() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// if cat_manager.contains_stage(&MyStage::Idle){
+    ///     println!("{:?}", MyStage::Idle);
+    /// };
+    /// ```
+    pub fn contains_stage(&self, stage: &T) -> bool {
+        self.current_vec_query().contains(stage)
+    }
+
+    /// # Example of StageManager - clear_query() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// # #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+    /// # enum MyStage { Idle }
+    /// # impl manager_types::PurrStep for MyStage {}
+    /// 
+    /// let mut cat_manager = manager::StageManager::new();
+    /// 
+    /// # cat_manager.add_to_graph(MyStage::Idle);
+    /// 
+    /// cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::KeepAll);
+    /// 
+    /// cat_manager.clear_query();
+    /// 
+    /// let current_vec_query = cat_manager.current_vec_query();
+    /// 
+    /// println!("{:?}", current_vec_query);
+    /// ```
+    pub fn clear_query(&mut self) {
+        self.vector_stage.clear();
     }
 }
+

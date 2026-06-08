@@ -1,15 +1,15 @@
 [package]
 name = "purrgress"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
+
+documentation = "https://docs.rs"
 
 description = "A lightweight, async-ready hierarchical stage machine tailored for P2P networks and game state trees."
 
 license = "MIT"
 
 repository = "https://github.com/Honami333/purrgress"
-
-documentation = "https://docs.rs"
 
 keywords = ["state-machine", "p2p", "gamedev", "bevy", "async"]
 
@@ -21,9 +21,29 @@ exclude = [
 ]
 
 [dependencies]
+bevy_ecs  = { version = "0.18", optional = true, default-features = false }
+
 petgraph = "0.8.3"
-purrgress-macros = { version = "0.2.0", path = "./purrgress-macros" }
+dyn-clone = "1.0"
+purrgress-macros = { version = "0.2.1", path = "./purrgress-macros" }
+
+[features]
+default = []
+bevy = ["dep:bevy_ecs"]
+animator = []
 
 [[example]]
 name = "basic_test"
 path = "examples/basic_test.rs"
+required-features = []
+
+
+[[example]]
+name = "pandemonium_fps_test"
+path = "examples/pandemonium_fps_test.rs"
+required-features = ["animator"]
+
+[[example]]
+name = "work_under_tets"
+path = "examples/work_under_tets.rs"
+required-features = []

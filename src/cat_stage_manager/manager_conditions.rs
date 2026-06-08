@@ -3,6 +3,8 @@ use super::manager_types::*;
 use super::manager::*;
 
 
+// A file for working with stage execution conditions in the manager
+
 impl<T> StageManager<T> 
 where 
     T: PurrStep

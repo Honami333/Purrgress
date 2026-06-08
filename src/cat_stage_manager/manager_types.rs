@@ -1,5 +1,10 @@
 use std::hash::Hash;
 
+
+// A structural file containing policies as enums
+//  Custom structures similar to Vec2
+//  And the main trait for stages
+
 /// # Example of PurrStep trait usage
 /// use purrgress::cat_stage_manager::*;
 /// 
@@ -223,4 +228,153 @@ pub enum PurrAction {
 pub enum RumblePolicy {
     StrictOrder,
     Parallel,
+}
+
+/// #PurrVec
+/// // Vector2 with values ​​in the form of x and y coordinates
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PurrVec {
+    pub x: f32,
+    pub y: f32,
+}
+
+impl Default for PurrVec {
+    /// # Example of PurrVec create
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with zero values
+    /// let my_vec2 = manager_types::PurrVec::default();
+    /// ```
+    fn default() -> Self {
+        Self::new(0.0, 0.0)
+    }
+}
+
+impl PurrVec {
+    /// # Example of PurrVec create
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with any values
+    /// let my_vec2 = manager_types::PurrVec::new(1.0, 1.0);
+    /// ```
+    pub const fn new(x: f32, y: f32) -> Self {
+        PurrVec { x, y }
+    }
+}
+
+impl PurrVec {
+    /// # Example of PurrVec - length_squared() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with any values
+    /// let my_vec2 = manager_types::PurrVec::new(1.0, 1.0);
+    /// 
+    /// // Calculates the squared length of a vector for easy comparisons
+    /// let length_squared = my_vec2.length_squared();
+    /// ```
+    pub fn length_squared(&self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
+
+    /// # Example of PurrVec - length() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with any values
+    /// let my_vec2 = manager_types::PurrVec::new(1.0, 1.0);
+    /// 
+    /// // Calculates the length of a vector for convenient comparisons but is a more expensive operation
+    /// let length = my_vec2.length();
+    /// ```
+    pub fn length(&self) -> f32 {
+        self.length_squared().sqrt()
+    }
+
+    /// # Example of PurrVec - distance() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with any values
+    /// let my_vec1 = manager_types::PurrVec::new(1.0, 1.0);
+    /// let my_vec2 = manager_types::PurrVec::new(2.0, 10.0);
+    /// 
+    /// // Calculates the distance between two vectors
+    /// let distance = my_vec1.distance(my_vec2);
+    /// ```
+    pub fn distance(&self, other: Self) -> f32 {
+        ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    }
+
+    /// # Example of PurrVec - normalize() usage
+    ///
+    /// ```rust
+    /// use purrgress::cat_stage_manager::*;
+    /// 
+    /// // Creates a vector2 with any values
+    /// let my_vec2 = manager_types::PurrVec::new(1.0, 1.0);
+    /// 
+    /// // Normalizes vector coordinates for convenient work with directions, etc.
+    /// let my_vec2_normalize = my_vec2.normalize();
+    /// ```
+    pub fn normalize(&self) -> Self {
+        let len = self.length();
+        if len > 0.0 {
+            Self { x: self.x / len, y: self.y / len }
+        } else {
+            Self::default()
+        }
+    }
+}
+
+impl PurrVec {
+    /// # Example of PurrVec - zero() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: 0.0 0.0
+    /// let zero_vec = manager_types::PurrVec::zero();
+    /// ```
+    pub const fn zero() -> Self { Self::new(0.0, 0.0) }
+    /// # Example of PurrVec - one() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: 1.0 1.0
+    /// let one_vec = manager_types::PurrVec::one();
+    /// ```
+    pub const fn one() -> Self { Self::new(1.0, 1.0) }
+    /// # Example of PurrVec - left() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: -1.0 0.0
+    /// let left_vec = manager_types::PurrVec::left();
+    /// ```
+    pub const fn left() -> Self { Self::new(-1.0, 0.0) }
+    /// # Example of PurrVec - right() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: 1.0 0.0
+    /// let right_vec = manager_types::PurrVec::right();
+    /// ```
+    pub const fn right() -> Self { Self::new(1.0, 0.0) }
+    /// # Example of PurrVec - up() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: 0.0 1.0
+    /// let up_vec = manager_types::PurrVec::up();
+    /// ```
+    pub const fn up() -> Self { Self::new(0.0, 1.0) }
+    /// # Example of PurrVec - down() usage
+    ///
+    /// ```rust
+    /// // Creates a vector with values: 0.0 -1.0
+    /// let down_vec = manager_types::PurrVec::down();
+    /// ```
+    pub const fn down() -> Self { Self::new(0.0, -1.0) }
 }

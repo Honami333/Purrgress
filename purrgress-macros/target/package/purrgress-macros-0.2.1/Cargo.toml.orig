@@ -1,0 +1,23 @@
+[package]
+name = "purrgress-macros"
+version = "0.2.1"
+edition = "2024"
+
+description = "Procedural macros for the purrgress hierarchical stage machine crate."
+
+license = "MIT"
+
+repository = "https://github.com/Honami333/purrgress"
+
+keywords = ["macros", "proc-macro", "state-machine", "purrgress"]
+
+exclude = [
+    "target/*"
+]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"  

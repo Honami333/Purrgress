@@ -1,0 +1,11 @@
+C:\Users\Honami\Desktop\purrgress\purrgress-macros\target\debug\deps\quote-8f7971cbcfddcde5.d: C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\lib.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ext.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\format.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ident_fragment.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\to_tokens.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\runtime.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\spanned.rs
+
+C:\Users\Honami\Desktop\purrgress\purrgress-macros\target\debug\deps\libquote-8f7971cbcfddcde5.rmeta: C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\lib.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ext.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\format.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ident_fragment.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\to_tokens.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\runtime.rs C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\spanned.rs
+
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\lib.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ext.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\format.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\ident_fragment.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\to_tokens.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\runtime.rs:
+C:\Users\Honami\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\quote-1.0.45\src\spanned.rs:

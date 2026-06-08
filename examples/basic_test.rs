@@ -58,7 +58,7 @@ fn create_sub_manager_1(cat_manager: &mut manager::StageManager<MyStage>) -> MyS
     let idle_condition = condition::PurrTimer::new(2.0);
     let walk_condition = condition::PurrTimer::new(2.0);
     let run_condition = condition::PurrTimer::new(4.0);
-
+    
     let sub_cat_manager_procces_1 = purrgress_macros::new_purr_chain!(
         cat_manager,
         MyStage,
@@ -85,7 +85,7 @@ fn add_sub_manager_1(
     purrgress_macros::purr_pounce!(
         cat_manager : sub_cat_manager_procces_1,
         MyStage,
-        manager::PurrAction::Push,
+        manager_types::PurrAction::Push,
         !manager_types::DuplicatePolicy::RemoveMatch
     );
 }
@@ -119,17 +119,13 @@ fn update_sub_manager_1(
 
 fn sub_manager_procces_1_func(sub_manager_1: &mut manager::StageManager<MyStage>, delta: f32) {
 
-    if let Some(idle_time) = sub_manager_1.get_condition_mut::<condition::PurrTimer>(MyStage::Idle) {
-        idle_time.tick(delta);
-    };
+    let timer_staege = [MyStage::Idle, MyStage::Walk, MyStage::Run];
 
-    if let Some(walk_time) = sub_manager_1.get_condition_mut::<condition::PurrTimer>(MyStage::Walk) {
-        walk_time.tick(delta);
-    };
-
-    if let Some(walk_time) = sub_manager_1.get_condition_mut::<condition::PurrTimer>(MyStage::Run) {
-        walk_time.tick(delta);
-    };
+    for stage in timer_staege {
+        if let Some(timer) = sub_manager_1.get_condition_mut::<condition::PurrTimer>(stage) {
+            timer.tick(delta);
+        };
+    }
 }
 
 fn get_delta_time(last_time: &mut time::Instant) -> f32 {
@@ -166,14 +162,14 @@ fn add_sub_manager_2(
     purrgress_macros::purr_tentacle!(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
-        manager::PurrAction::Push : MyStage::Run,
+        manager_types::PurrAction::Push : MyStage::Run,
         !manager_types::DuplicatePolicy::KeepAll
     );
 
     purrgress_macros::purr_pounce!(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
-        manager::PurrAction::Push,
+        manager_types::PurrAction::Push,
         !manager_types::DuplicatePolicy::KeepAll
     );
 }
@@ -207,15 +203,11 @@ fn update_sub_manager_2(
 
 fn sub_manager_procces_2_func(sub_manager_2: &mut manager::StageManager<MyStage>, delta: f32) {
 
-    if let Some(idle_time) = sub_manager_2.get_condition_mut::<condition::PurrTimer>(MyStage::Idle) {
-        idle_time.tick(delta);
-    };
+    let timer_staege = [MyStage::Idle, MyStage::Walk, MyStage::Run];
 
-    if let Some(walk_time) = sub_manager_2.get_condition_mut::<condition::PurrTimer>(MyStage::Walk) {
-        walk_time.tick(delta);
-    };
-
-    if let Some(walk_time) = sub_manager_2.get_condition_mut::<condition::PurrTimer>(MyStage::Run) {
-        walk_time.tick(delta);
-    };
+    for stage in timer_staege {
+        if let Some(timer) = sub_manager_2.get_condition_mut::<condition::PurrTimer>(stage) {
+            timer.tick(delta);
+        };
+    }
 }

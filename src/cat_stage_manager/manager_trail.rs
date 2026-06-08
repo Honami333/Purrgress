@@ -4,6 +4,9 @@ use super::manager_types::*;
 use super::manager::*;
 
 
+// A file for working with the queue
+// Here are all the functions for inserting stages into the queue
+
 impl<T> StageManager<T> 
 where 
     T: PurrStep

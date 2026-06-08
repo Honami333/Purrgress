@@ -5,9 +5,16 @@ use super::condition::*;
 use super::manager_types::*;
 
 
+// The crate's root file containing the manager structure
+//  Graph operations
+//  The queue update system
+//  And functions for retrieving data from the queue
+
 #[doc = "## Example of StageManager usage"]
 #[doc = ""]
 #[doc = include_str!("../../examples/basic_test.rs")]
+#[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
+#[derive(Debug)]
 pub struct StageManager<T: PurrStep> {
     pub(crate) vector_stage: Vec<T>,
     pub(crate) graph: DiGraph<T, ()>,
@@ -60,7 +67,7 @@ where
         }
     }
 
-    /// # Example of StageManager - add_to_graph()
+    /// # Example of StageManager - add_to_graph() usage
     ///
     /// ```rust
     /// use purrgress::cat_stage_manager::*;

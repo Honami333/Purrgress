@@ -25,8 +25,11 @@ Add the library to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-purrgress = "0.1.0"
+purrgress = "0.3.0"
 ```
+
+### The library includes a built-in animator; to enable it, use features = "animator"
+### В библиотеке есть встроенный аниматор, что бы подключить его используйте features = "animator"
 
 ### Quick Start
 
@@ -345,14 +348,119 @@ fn sub_manager_procces_2_func(sub_manager_2: &mut manager::StageManager<MyStage>
         walk_time.tick(delta);
     };
 }
+
+#Working with an animator
+
+use purrgress_macros::{meowphosis, PurrStep};
+use purrgress::cat_stage_manager::*;
+use purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage;
+use std::collections::HashMap;
+use std::time;
+
+#[meowphosis]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
+pub enum MyStage {
+    Idle,
+    Walk,
+    Run,
+    PurrChain(usize)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum MyFrameStage {
+    Start,
+    Run,
+    End,
+    Pause,
+}
+
+fn main() {
+    let idle_ani_manager = purrgress_macros::purr_pandemonium!(
+        !!MyStage::Idle : <
+            MyFrameStage::Start, [3, 10] =>
+            MyFrameStage::Run, [3, 12, pandemonium_types::AbyssalDuration::Seconds(1.0)] => 
+            MyFrameStage::End, [3, 10]
+        >
+    );
+
+    let walk_ani_manager = purrgress_macros::purr_pandemonium!(
+        !!MyStage::Walk : <
+            MyFrameStage::Pause, [3, 10, pandemonium_types::AbyssalDuration::Millis(100.0)] =>
+            MyFrameStage::Start, [3, 10] =>
+            MyFrameStage::Pause, [3, 10, pandemonium_types::AbyssalDuration::Millis(100.0)] =>
+            MyFrameStage::Run, [10, 24, pandemonium_types::AbyssalDuration::Seconds(10.0)] => 
+            MyFrameStage::End, [3, 10]
+        >
+    );
+
+    let animator_meta_data = purrgress_macros::abyssal_grimoire!(
+        !!MyStage : <
+            idle_ani_manager,
+            walk_ani_manager
+        >
+    );
+
+    let animator_meta_data = purrgress_macros::abyssal_march!(
+        !!!animator_meta_data : <
+            manager::PurrAction::Push : MyStage::Idle,
+            !manager_types::DuplicatePolicy::KeepAll;
+        >
+    );
+
+    let mut animator_meta_data = purrgress_macros::abyssal_march!(
+        !!!animator_meta_data : <
+            manager::PurrAction::Push : MyStage::Walk,
+            !manager_types::DuplicatePolicy::KeepAll;
+        >
+    );
+
+    let mut last_time = time::Instant::now();
+
+    loop {
+        let delta = get_delta_time(&mut last_time);
+
+        let updated_animator_meta_data = purrgress_macros::purr_rumble_brimstone!(
+            !!!animator_meta_data
+        );
+
+        if let (Some(stage), Some(sub_satge), Some(index)) = updated_animator_meta_data.0 {
+            println!("ani stage: {:?}, ani sub stage: {:?}, stage index: {}", stage, sub_satge, index);
+        };
+
+        let animator = updated_animator_meta_data.1.get_animator();
+
+        if animator.query_is_empty() {
+            break;
+        };
+
+        animator_meta_data = updated_animator_meta_data.1;
+    }
+}
+
+fn get_delta_time(last_time: &mut time::Instant) -> f32 {
+    let current_time = time::Instant::now();
+    let delta = current_time.duration_since(*last_time).as_secs_f32();
+    *last_time = current_time;
+
+    delta
+}
 ```
 
 ## Roadmap
 
-- [ ] Version `0.3.0`: Official plugin for `bevy` engine integration.
-- [ ] Version `0.4.0`: Three-step pattern for sprite and animation management.
-- [ ] Version `0.5.0`: Feature flag for async conditions powered by `tokio`.
+- [ ] Version `0.4.0`: Feature flag for async conditions powered by `tokio`.
 
-- [ ] Версия `0.3.0`: Официальный плагин для интеграции с движком `bevy`.
-- [ ] Версия `0.4.0`: Трехступенчатый паттерн для работы со спрайтами и анимациями.
-- [ ] Версия `0.5.0`: Feature-флаг для асинхронных условий на базе `tokio`.
+- [ ] Версия `0.4.0`: Feature-флаг для асинхронных условий на базе `tokio`.
+
+## ─── ВЫПОЛНЕНО / АРХИВ ───
+### [v0.2.0]
+* [x] Macros to make working with duplicates and nested stages easier.
+
+* [x] Макросы для облечения работы с дубликатами и вложеными стадиями.
+
+### [v0.3.0]
+* [x] Official plugin for `bevy` engine integration. As a label component.
+* [x] Three-step pattern for sprite and animation management. Even more! The phases are limited by the user's needs!
+
+* [x] Официальный плагин для интеграции с движком `bevy`. Ввиде компонент метки.
+* [x] Трехступенчатый паттерн для работы со спрайтами и анимациями. Даже больше! Фазы ограничены потребностями пользотеля!

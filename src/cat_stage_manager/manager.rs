@@ -13,7 +13,7 @@ use super::manager_types::*;
 #[doc = "## Example of StageManager usage"]
 #[doc = ""]
 #[doc = include_str!("../../examples/basic_test.rs")]
-#[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug)]
 pub struct StageManager<T: PurrStep> {
     pub(crate) vector_stage: Vec<T>,

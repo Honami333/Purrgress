@@ -12,7 +12,7 @@ use super::*;
 // You can explore and dig into it for familiarization purposes!
 // But in most projects, these structures will never be needed in their raw form!
 
-#[cfg_attr(feature = "bevy", derive(bevy::prelude::Component))]
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 pub struct PurrAnimator<T, U, C>
 where 
     T: manager_types::PurrStep,

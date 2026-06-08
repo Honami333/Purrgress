@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::cat_stage_manager::*;
+use crate::cat_stage_manager::manager::StageManager;
 
 use super::*;
 

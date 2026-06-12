@@ -421,7 +421,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "bevy_ecs",
  "dyn-clone",
@@ -431,7 +431,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress-macros"
-version = "0.3.4"
+version = "0.3.3"
 dependencies = [
  "quote",
  "syn",

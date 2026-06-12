@@ -27,7 +27,7 @@ where
     /// ```
     pub fn set_condition<C>(&mut self, stage: T, condition: C) 
     where 
-        C: PurrCondition + 'static
+        C: PurrCondition + 'static + Send + Sync
     {
         let box_condition = Box::new(condition);
         self.conditions.insert(stage, box_condition);

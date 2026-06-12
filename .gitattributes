@@ -1,0 +1,2 @@
+Makefile linguist-documentation=true
+*.d linguist-documentation=true

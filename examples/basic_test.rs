@@ -125,7 +125,7 @@ fn sub_manager_procces_1_func(sub_manager_1: &mut manager::StageManager<MyStage>
         if let Some(timer) = sub_manager_1.get_condition_mut::<condition::PurrTimer>(stage) {
             timer.tick(delta);
         };
-    }
+    };
 }
 
 fn get_delta_time(last_time: &mut time::Instant) -> f32 {
@@ -184,6 +184,7 @@ fn update_sub_manager_2(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
         sub_manager_procces_2_func : delta
+        !!manager_types::RumblePolicy::Parallel
     );
 
     if let Some(stage) = sub_cat_manager_stage_2 {

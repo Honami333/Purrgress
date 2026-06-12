@@ -253,7 +253,7 @@ pub fn purr_pounce(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///     main_manager : sub_manager_variable,
 ///     StageEnumTypeName,
 /// 
-///     your_function_name : arguments,
+///     your_function_name : arguments
 /// 
 ///     // Enables for this queue element
 ///     // The feature is executed out of order - in parallel

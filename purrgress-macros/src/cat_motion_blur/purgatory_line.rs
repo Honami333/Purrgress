@@ -4,7 +4,7 @@ use quote;
 
 pub(crate) struct AbyssalCavalcadeInput  {
     pub(crate) _comma_start: (Token![!], Token![!], Token![!]),
-    pub(crate) animator_mata_data: Ident,
+    pub(crate) animated_meta_data: Ident,
     pub(crate) _comma1: Token![:],
     pub(crate) _comma2: Token![<],
     pub(crate) purr_action: Expr,
@@ -18,7 +18,7 @@ pub(crate) struct AbyssalCavalcadeInput  {
 impl Parse for AbyssalCavalcadeInput {
     fn parse(input: ParseStream) -> Result<Self> {
         let _comma_start = (input.parse()?, input.parse()?, input.parse()?);
-        let animator_mata_data = input.parse()?; 
+        let animated_meta_data = input.parse()?; 
 
         let _comma1 = input.parse()?; 
         let _comma2 = input.parse()?; 
@@ -55,7 +55,7 @@ impl Parse for AbyssalCavalcadeInput {
 
         Ok(AbyssalCavalcadeInput {
             _comma_start,
-            animator_mata_data,
+            animated_meta_data,
             _comma1,
             _comma2,
             purr_action,
@@ -72,7 +72,7 @@ impl Parse for AbyssalCavalcadeInput {
 pub fn abyssal_march_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = syn::parse_macro_input!(input as AbyssalCavalcadeInput);
 
-    let animator_mata_data = &input.animator_mata_data;
+    let animated_meta_data = &input.animated_meta_data;
 
     let purr_stage = &input.purr_stage;
 
@@ -135,56 +135,43 @@ pub fn abyssal_march_impl(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     };
 
     let expanded = quote::quote! {
-        {
-            let mut animator_mata_data = #animator_mata_data;
-
-            let mut sub_manager_index = None;
-
-            let mut animated_meta_data = Vec::new();
+        let animated_meta_data = &mut #animated_meta_data 
+            as *mut purrgress::cat_motion_blur::memory_demonium::PurrAnimator<PurrFrameStage, _, _>;
             
+        unsafe {
             // Reading data from metadata
-            if let Some(animated_stages) = animator_mata_data.get_animated_stages(#purr_stage) {
-                if let purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage::PurrChain(index) = animated_stages.0 {
-                    sub_manager_index = Some(index);
-                };
-
-                for (frame_stage_index, flow_meta_data) in animated_stages.1.get_flow_stages() {
-                    animated_meta_data.push((*frame_stage_index, *flow_meta_data));
-                };
-            };
+            if let Some(animated_stages) = (*animated_meta_data).get_animated_stages(#purr_stage) {
+                let animator = (*animated_meta_data).get_animator_mut();
             
-            let animator = animator_mata_data.get_animator_mut();
+                // Working with the received data
+                if let purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage::PurrChain(index) = animated_stages.0 {
+                    if let Some(sub_stage_manager) = animator.get_sub_manager_mut(index) {
+                        for (frame_stage_index, flow_meta_data) in animated_stages.1.get_flow_stages() {
+                            let last_frame_index = flow_meta_data.get_last_frame_index();
+                            let get_flow_stage_chain_index = flow_meta_data.get_flow_stage_chain_index();
 
-            // Working with the received data
-            if let Some(index) = sub_manager_index {
-                if let Some(sub_stage_manager) = animator.get_sub_manager_mut(index) {
-                    for (frame_stage_index, flow_meta_data) in animated_meta_data {
-                        let last_frame_index = flow_meta_data.get_last_frame_index();
-                        let get_flow_stage_chain_index = flow_meta_data.get_flow_stage_chain_index();
+                            // Performing an internal frame push inside each second-level sub-manager
+                            purrgress_macros::purr_tentacle!(
+                                sub_stage_manager : get_flow_stage_chain_index,
+                                PurrFrameStage,
+                                manager_types::PurrAction::Push : last_frame_index,
+                                !manager_types::DuplicatePolicy::KeepAll
+                            );
 
-                        // Performing an internal frame push inside each second-level sub-manager
-                        purrgress_macros::purr_tentacle!(
-                            sub_stage_manager : get_flow_stage_chain_index,
-                            PurrFrameStage,
-                            manager_types::PurrAction::Push : last_frame_index,
-                            !manager_types::DuplicatePolicy::KeepAll
-                        );
+                            // Adding a second-level sub-manager inside a first-level sub-manager
+                            purrgress_macros::purr_pounce!(
+                                sub_stage_manager : get_flow_stage_chain_index,
+                                PurrFrameStage,
+                                manager_types::PurrAction::Push,
+                                !manager_types::DuplicatePolicy::KeepAll
+                            );
+                        };
 
-                        // Adding a second-level sub-manager inside a first-level sub-manager
-                        purrgress_macros::purr_pounce!(
-                            sub_stage_manager : get_flow_stage_chain_index,
-                            PurrFrameStage,
-                            manager_types::PurrAction::Push,
-                            !manager_types::DuplicatePolicy::KeepAll
-                        );
+                        #body
                     };
-
-                    #body
                 };
             };
-
-            animator_mata_data
-        }
+        };
     };
 
     proc_macro::TokenStream::from(expanded)

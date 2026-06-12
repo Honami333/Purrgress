@@ -40,21 +40,21 @@ fn main() {
         >
     );
 
-    let animator_meta_data = purrgress_macros::abyssal_grimoire!(
+    let mut animator_meta_data = purrgress_macros::abyssal_grimoire!(
         !!MyStage : <
             idle_ani_manager,
             walk_ani_manager
         >
     );
 
-    let animator_meta_data = purrgress_macros::abyssal_march!(
+    purrgress_macros::abyssal_march!(
         !!!animator_meta_data : <
             manager::PurrAction::Push : MyStage::Idle,
             !manager_types::DuplicatePolicy::KeepAll;
         >
     );
 
-    let mut animator_meta_data = purrgress_macros::abyssal_march!(
+    purrgress_macros::abyssal_march!(
         !!!animator_meta_data : <
             manager::PurrAction::Push : MyStage::Walk,
             !manager_types::DuplicatePolicy::KeepAll;
@@ -70,17 +70,15 @@ fn main() {
             !!!animator_meta_data
         );
 
-        if let (Some(stage), Some(sub_satge), Some(index)) = updated_animator_meta_data.0 {
+        if let (Some(stage), Some(sub_satge), Some(index)) = updated_animator_meta_data {
             println!("ani stage: {:?}, ani sub stage: {:?}, stage index: {}", stage, sub_satge, index);
         };
 
-        let animator = updated_animator_meta_data.1.get_animator();
+        let animator = animator_meta_data.get_animator();
 
         if animator.query_is_empty() {
             break;
         };
-
-        animator_meta_data = updated_animator_meta_data.1;
     }
 }
 

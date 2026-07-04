@@ -46,7 +46,7 @@ pub trait PurrCondition: Debug {
 /// let idle_condition = condition::InstantCondition;
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InstantCondition;
 
 impl PurrCondition for InstantCondition {
@@ -74,7 +74,7 @@ impl PurrCondition for InstantCondition {
 /// let idle_condition = condition::PurrTimer::new(1.0);;
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PurrTimer {
     duration: f32,
     time_left: f32,
@@ -149,7 +149,7 @@ impl PurrCondition for PurrTimer {
 /// let idle_condition = condition::PurrFlag::new();
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PurrFlag {
     select_flag: bool,
 }
@@ -220,7 +220,7 @@ impl PurrCondition for PurrFlag {
 /// 
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PurrProximity {
     pos: PurrVec,
     start_pos: PurrVec,
@@ -301,11 +301,28 @@ impl PurrProximity {
     pub fn get_distance(&self) -> f32 {
         self.pos.distance(self.target_pos)
     }
+
+    pub fn get_distance_not_sqrt(&self) -> f32 {
+        self.pos.distance_not_sqrt(self.target_pos)
+    }
 }
 
 impl PurrCondition for PurrProximity {
     fn is_finished(&mut self) -> bool {
-        self.pos == self.target_pos
+        let forward_x = self.target_pos.x >= self.start_pos.x;
+        let forward_y = self.target_pos.y >= self.start_pos.y;
+
+        let tx = self.target_pos.x;
+        let ty = self.target_pos.y;
+        let px = self.pos.x;
+        let py = self.pos.y;
+
+        match (forward_x, forward_y) {
+            (true, true) => px >= tx && py >= ty,
+            (true, false) => px >= tx && py < ty,
+            (false, true) => px < tx && py >= ty,
+            (false, false) => px < tx && py < ty,
+        }
     }
 
     fn reset(&mut self) {

@@ -1,5 +1,9 @@
 extern crate self as purrgress;
 
+pub mod cat_malloc {
+    pub mod purr_train;
+}
+
 #[cfg(feature = "animator")]
 pub mod cat_motion_blur {
     pub mod memory_demonium;

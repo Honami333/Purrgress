@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "anyhow"
+version = "1.0.103"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
+
+[[package]]
 name = "async-channel"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -180,6 +186,12 @@ name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+
+[[package]]
+name = "cursorvec"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4cc6b63f3bf7883076f49a6a175255ceaa12305af4cb49d698a3a745e811c3f"
 
 [[package]]
 name = "derive_more"
@@ -421,9 +433,11 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.3.4"
+version = "0.4.0"
 dependencies = [
+ "anyhow",
  "bevy_ecs",
+ "cursorvec",
  "dyn-clone",
  "petgraph",
  "purrgress-macros",

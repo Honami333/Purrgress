@@ -1,5 +1,5 @@
 use std::hash::Hash;
-
+use std::fmt::Debug;
 
 // A structural file containing policies as enums
 //  Custom structures similar to Vec2
@@ -13,7 +13,7 @@ use std::hash::Hash;
 /// enum MyStage { Idle, Walk }
 /// 
 /// impl manager_types::PurrStep for MyStage {}
-pub trait PurrStep: Copy + Clone + PartialEq + Eq + Hash {}
+pub trait PurrStep: Debug + Copy + Clone + PartialEq + Eq + Hash {}
 
 /// # Example of DuplicatePolicy usage
 ///
@@ -311,6 +311,10 @@ impl PurrVec {
     /// ```
     pub fn distance(&self, other: Self) -> f32 {
         ((self.x - other.x).powi(2) + (self.y - other.y).powi(2)).sqrt()
+    }
+
+    pub fn distance_not_sqrt(&self, other: Self) -> f32 {
+        (self.x - other.x).powi(2) + (self.y - other.y).powi(2)
     }
 
     /// # Example of PurrVec - normalize() usage

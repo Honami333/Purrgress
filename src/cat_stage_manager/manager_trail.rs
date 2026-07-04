@@ -1,6 +1,7 @@
 use petgraph::visit::{Reversed, Dfs};
 
-use super::manager_types::*;
+use crate::types::*;
+
 use super::manager::*;
 
 

@@ -1,4 +1,6 @@
 use purrgress::cat_stage_manager::*;
+use purrgress::condition;
+use purrgress::types;
 
 use purrgress_macros::{meowphosis, PurrStep};
 
@@ -38,12 +40,12 @@ fn main() {
         update_sub_manager_2(&mut cat_manager, sub_cat_manager_procces_2, delta);
 
         match cat_manager.update() {
-            manager_types::PurrEvent::Idle => {
+            types::PurrEvent::Idle => {
                 println!("The queue main manager is empty");
                 break;
             },
-            manager_types::PurrEvent::Running(_) => (),
-            manager_types::PurrEvent::Transition { from, to } => {
+            types::PurrEvent::Running(_) => (),
+            types::PurrEvent::Transition { from, to } => {
                 println!("The action {:?} is over", from);
                 if let Some(to) = to {
                     println!("Go to {:?}", to);
@@ -79,14 +81,14 @@ fn add_sub_manager_1(
         cat_manager : sub_cat_manager_procces_1,
         MyStage,
         manager::PurrAction::Push : MyStage::Run,
-        !manager_types::DuplicatePolicy::RemoveMatch
+        !types::DuplicatePolicy::RemoveMatch
     );
 
     purrgress_macros::purr_pounce!(
         cat_manager : sub_cat_manager_procces_1,
         MyStage,
         manager_types::PurrAction::Push,
-        !manager_types::DuplicatePolicy::RemoveMatch
+        !types::DuplicatePolicy::RemoveMatch
     );
 }
 
@@ -104,9 +106,9 @@ fn update_sub_manager_1(
 
     if let Some(stage) = sub_cat_manager_stage_1 {
         match stage {
-            manager_types::PurrEvent::Idle => println!("The queue sub manager 1 is empty"),
-            manager_types::PurrEvent::Running(_) => (),
-            manager_types::PurrEvent::Transition { from, to } => {
+            types::PurrEvent::Idle => println!("The queue sub manager 1 is empty"),
+            types::PurrEvent::Running(_) => (),
+            types::PurrEvent::Transition { from, to } => {
                    println!("The action {:?} is over", from);
 
                 if let Some(to) = to {
@@ -163,14 +165,14 @@ fn add_sub_manager_2(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
         manager_types::PurrAction::Push : MyStage::Run,
-        !manager_types::DuplicatePolicy::KeepAll
+        !types::DuplicatePolicy::KeepAll
     );
 
     purrgress_macros::purr_pounce!(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
         manager_types::PurrAction::Push,
-        !manager_types::DuplicatePolicy::KeepAll
+        !types::DuplicatePolicy::KeepAll
     );
 }
 
@@ -184,14 +186,14 @@ fn update_sub_manager_2(
         cat_manager : sub_cat_manager_procces_2,
         MyStage,
         sub_manager_procces_2_func : delta
-        !!manager_types::RumblePolicy::Parallel
+        !!types::RumblePolicy::Parallel
     );
 
     if let Some(stage) = sub_cat_manager_stage_2 {
         match stage {
-            manager_types::PurrEvent::Idle => println!("The queue sub manager 2 is empty"),
-            manager_types::PurrEvent::Running(_) => (),
-            manager_types::PurrEvent::Transition { from, to } => {
+            types::PurrEvent::Idle => println!("The queue sub manager 2 is empty"),
+            types::PurrEvent::Running(_) => (),
+            types::PurrEvent::Transition { from, to } => {
                    println!("The action {:?} is over", from);
 
                 if let Some(to) = to {

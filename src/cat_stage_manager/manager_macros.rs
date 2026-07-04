@@ -1,4 +1,5 @@
-use super::manager_types::*;
+use crate::types::*;
+
 use super::manager::*;
 
 

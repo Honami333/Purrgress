@@ -1,8 +1,8 @@
 use petgraph::graph::{DiGraph, NodeIndex};
 use std::collections::HashMap;
 
-use super::condition::*;
-use super::manager_types::*;
+use crate::condition::*;
+use crate::types::*;
 
 
 // The crate's root file containing the manager structure

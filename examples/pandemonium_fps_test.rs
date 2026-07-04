@@ -1,6 +1,6 @@
 use purrgress_macros::{meowphosis, PurrStep};
-use purrgress::cat_stage_manager::*;
 use purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage;
+use purrgress::types;
 use std::collections::HashMap;
 use std::time;
 
@@ -50,14 +50,14 @@ fn main() {
     purrgress_macros::abyssal_march!(
         !!!animator_meta_data : <
             manager::PurrAction::Push : MyStage::Idle,
-            !manager_types::DuplicatePolicy::KeepAll;
+            !types::DuplicatePolicy::KeepAll;
         >
     );
 
     purrgress_macros::abyssal_march!(
         !!!animator_meta_data : <
             manager::PurrAction::Push : MyStage::Walk,
-            !manager_types::DuplicatePolicy::KeepAll;
+            !types::DuplicatePolicy::KeepAll;
         >
     );
 

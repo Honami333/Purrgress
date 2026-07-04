@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use crate::cat_stage_manager::*;
+use crate::condition;
 use crate::cat_stage_manager::manager::StageManager;
+use crate::types;
 
 use super::*;
 
@@ -15,8 +17,8 @@ use super::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 pub struct PurrAnimator<T, U, C>
 where 
-    T: manager_types::PurrStep,
-    U: manager_types::PurrStep
+    T: types::PurrStep,
+    U: types::PurrStep
 {
     animator_manager: manager::StageManager<T>,
 
@@ -25,8 +27,8 @@ where
 
 impl<T, U, C> PurrAnimator<T, U, C> 
 where 
-    T: manager_types::PurrStep,
-    U: manager_types::PurrStep
+    T: types::PurrStep,
+    U: types::PurrStep
 {
     pub fn new(
         animator_manager: manager::StageManager<T>,
@@ -41,8 +43,8 @@ where
 
 impl<T, U, C> PurrAnimator<T, U, C> 
 where 
-    T: manager_types::PurrStep,
-    U: manager_types::PurrStep
+    T: types::PurrStep,
+    U: types::PurrStep
 {
     pub fn get_animator(&self) -> &manager::StageManager<T> {
         &self.animator_manager
@@ -55,8 +57,8 @@ where
 
 impl<T, U, C> PurrAnimator<T, U, C> 
 where 
-    T: manager_types::PurrStep,
-    U: manager_types::PurrStep
+    T: types::PurrStep,
+    U: types::PurrStep
 {
     pub fn get_animated_stages(&self, stage: U) -> Option<&(pandemonium_types::PurrFrameStage, PurrAnimateMetaData<C>)>
     {

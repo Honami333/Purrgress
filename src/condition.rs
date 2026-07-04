@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use super::manager_types::*;
+use crate::types::PurrVec;
 
 
 // A file for built-in conditions
@@ -25,7 +25,9 @@ pub trait PurrCondition: Debug {
     fn is_finished(&mut self) -> bool;
     fn reset(&mut self);
 
+    #[cfg(feature = "scrap")]
     fn as_any(&self) -> &(dyn std::any::Any + 'static);
+    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut (dyn std::any::Any + 'static);
 }
 
@@ -54,7 +56,9 @@ impl PurrCondition for InstantCondition {
 
     fn reset(&mut self) {}
 
+    #[cfg(feature = "scrap")]
     fn as_any(&self) -> &dyn std::any::Any { self }
+    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }
 
@@ -129,7 +133,9 @@ impl PurrCondition for PurrTimer {
         self.time_left = 0.0;
     }
 
+    #[cfg(feature = "scrap")]
     fn as_any(&self) -> &dyn std::any::Any { self }
+    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }
 
@@ -189,7 +195,9 @@ impl PurrCondition for PurrFlag {
         self.select_flag = false;
     }
 
+    #[cfg(feature = "scrap")]
     fn as_any(&self) -> &dyn std::any::Any { self }
+    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }
 
@@ -329,7 +337,8 @@ impl PurrCondition for PurrProximity {
         self.pos = self.start_pos;
     }
 
+    #[cfg(feature = "scrap")]
     fn as_any(&self) -> &dyn std::any::Any { self }
-
+    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }

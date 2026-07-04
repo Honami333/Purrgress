@@ -1,22 +1,40 @@
-# purrgress
+# Purrgress
 
-An immediate-mode stage manager and queue sequencer for Rust with compile-time dependency validation and lightweight dynamic dispatch.
+### English
 
-Менеджер стадий и секвенсор очередей в стиле immediate-mode для Rust с валидацией зависимостей на этапе компиляции и легковесной динамической диспетчеризацией.
+* **An immediate-mode stage manager and queue sequencer for Rust with compile-time dependency validation,
+static zero-cost architecture, and legacy dynamic dispatch support.
 
-## Features
+### Русский
 
-* **Immediate-Mode Design** — Every-frame updates (`.update()`), perfect for seamless integration with Bevy, egui, and custom game loops.
-* **Graph-Based Dependencies** — Automated calculation and unrolling of task chains powered by a directed acyclic graph (`petgraph`).
-* **Zero-Cost Abstractions** — Heavy validation logic is processed during initialization, keeping the runtime flat and ultra-fast.
-* **Duplicate Control** — Flexible deduplication policies (`DuplicatePolicy`) and precise queue task positioning (`insert`).
-* **Clean Data Pushing** — No heavy runtime contexts in the update method. Data is pushed directly into conditions via mutable downcasting (`get_condition_mut`).
+* **Менеджер стадий и секвенсор очередей в стиле immediate-mode для Rust с валидацией зависимостей на этапе компиляции,
+статической zero-cost архитектурой и поддержкой легаси динамической диспетчеризации.
 
-* **Immediate-Mode Design** — Обновление каждый кадр (`.update()`), идеальная интеграция с Bevy, egui и любыми игровыми циклами.
-* **Graph-Based Dependencies** — Автоматическое вычисление и разворачивание цепочек задач с помощью направленного графа (`petgraph`).
-* **Zero-Cost Abstractions** — Вся тяжелая логика проверок подготавливается на этапе инициализации, рантайм остается плоским и сверхбыстрым.
-* **Duplicate Control** — Гибкие политики дедупликации повторов (`DuplicatePolicy`) и ювелирное позиционирование задач в очереди (`insert`).
-* **Clean Data Pushing** — Никаких тяжелых рантайм-контекстов в апдейте. Данные засылаются напрямую в условия через даункаст (`get_condition_mut`).
+## Lib Features
+
+### English
+
+* **A major architectural update 0.4.0 that completely rewrites the core internals of the stage and queue manager. The legacy system with recursive nesting remains for backward compatibility, while a parallel, ultra-fast engine has been built from scratch using Data-Oriented Design (DOD). It is tailored for real-time applications and game loops where frame budget and memory footprints are critical.
+What was added and changed in simple terms:
+
+* **Linear Trains Instead of Nesting: Nested stages no longer hold internal managers. All dependencies are automatically flattened into a straight line, and the nesting trigger is guaranteed to be pushed to the very end of the sequence.
+* **Zero Box and dyn Overhead: All custom execution conditions are packed into a single, static enum of a fixed size. No more dynamic dispatch or heap-hopping inside the hot path of the game loop.
+* **Graph Baking: The heavy recursive lookup and cyclic dependency checks run exactly once. Ready-to-go routes are cached, turning runtime initialization into a blazing-fast memory copy. You can still bake new scenarios dynamically mid-game.
+* **Isolated Sidings for Preparation (PurrSiding): A dedicated builder buffer manages train assembly. It allows you to extract indices of specific stages without expensive .find() calls and rewrite their default rules or timers before switching to the main track.
+* **Cursor-Based Queues: The primary controller (PurrTrain) now utilizes a shift-pointer vector instead of standard array shifting. Completed stages stay in place while the locomotive advances, making stage transitions cost exactly 0 nanoseconds.
+* **Leak and Bloat Protection: Smart capacity trimming has been introduced. Once the track is clear and the queue drops to idle, the memory is safely reclaimed by the OS, preventing RAM accumulation over months of non-stop deployment.
+
+### Русский
+
+* **Крупное архитектурное обновление 0.4.0 полностью меняет внутреннее устройство менеджера очередей и стадий. Старая система с вложенными структурами и динамическими проверками типов осталась для совместимости, а рядом написан новый легковесный движок на принципах Data-Oriented Design. Он разработан специально для real-time систем и геймдева, где критически важна скорость кадра и отсутствие утечек ОЗУ.
+Что именно добавлено и изменено простым языком:
+
+* **Линейные «паровозики» вместо матрешек: Вложенные стадии больше не хранят в себе другие менеджеры. Теперь все зависимости автоматически разворачиваются в одну прямую линию, а триггер вложенности гарантированно улетает в самый хвост цепочки.
+Полный отказ от Box и dyn: Все кастомные условия выполнения стадий упакованы в единый плоский энум фиксированного размера. Никакой динамической диспетчеризации и прыжков по куче (heap) в игровом цикле.
+* **Запекание графов (Baking): Тяжелый рекурсивный обход связей и проверка на бесконечные циклы происходят всего один раз. Готовые маршруты кэшируются, а в рантайме они мгновенно копируются в память за один такт. Можно безопасно собирать новые сценарии прямо по ходу игры.
+* **Запасные пути для сборки (PurrSiding): Появился специальный изолированный контекст-буфер. В него выгружается шаблон, после чего можно без тяжелого поиска (.find()) быстро собрать индексы нужных вагонов и точечно переписать им таймеры или флаги перед отправкой на главный путь.
+* **Очередь без удаления элементов: Главный состав (PurrTrain) работает на базе вектора со сдвигом указателя. Пройденные стадии не сдвигают массив в памяти. Удаление и переход на следующий шаг теперь занимают ровно 0 наносекунд.
+* **Защита от раздувания памяти: Внедрена автоматическая очистка емкости по порогу. Когда поезд доезжает до конечной, память физически возвращается операционной системе, что защищает либу от утечек при непрерывной работе в течение месяцев.
 
 ## Usage
 
@@ -25,23 +43,45 @@ Add the library to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-purrgress = "0.3.0"
+purrgress = { version = "0.4.1", features = ["train"] }
 ```
 
-### The library includes a built-in animator; to enable it, use features = "animator"
-### В библиотеке есть встроенный аниматор, что бы подключить его используйте features = "animator"
+## Features / Поддерживаемые фичи
+
+### English
+
+By default, all features are disabled so you can compile only what your game loop requires.
+
+* **`train` (Highly Recommended)** — Activates the high-performance Data-Oriented engine. It provides a flat, ultra-fast, zero-cost layout (`PurrTrain`, `PurrSiding`, `PurrRoute`) with O(1) transitions and direct memory reclamation.
+* **`animator`** — Enables the built-in stage animator system (automatically pulls the `scrap` core and internal macro generators).
+* **`scrap`** — Retains the hierarchical stage manager and queue sequencer for cases requiring deep recursive nesting and runtime dynamics.
+* **`bevy_ecs`** — Provides optional ECS integration blocks for Bevy.
+
+### Русский
+
+По умолчанию все фичи выключены. Вы сами выбираете, за какой функционал платить временем компиляции и байтами в бинарнике.
+
+* **`train` (Рекомендуется)** — Включает высокопроизводительный Data-Oriented движок. Обеспечивает плоскую, сверхбыструю zero-cost архитектуру (`PurrTrain`, `PurrDesign, `PurrRoute`, `PurrSiding`) со скоростью переходов O(1) и прямым возвратом памяти операционной системе.
+* **`animator`** — Подключает встроенную систему анимации стадий (под капотом автоматически задействует архитектуру `scrap` и внутренние генераторы макросов).
+* **`scrap`** — Оставляет иерархический менеджер стадий и секвенсор очередей для сценариев, требующих глубокой вложенности и высокой динамики в рантайме.
+* **`bevy_ecs`** — Добавляет опциональную интеграцию с ECS-системой Bevy.
 
 ### Quick Start
-
-A basic example of modeling a cat behavior chain (`Idle -> Walk -> Run`):
-Простейший пример моделирования цепочки поведений кота (`Idle -> Walk -> Run`):
 
 ```rust
 # Work PurrTrain
 
-use purrgress::{cat_malloc::purr_train::{self, StandardRules}, cat_stage_manager::manager_types::PurrEvent};
-use purrgress_macros::PurrStep;
+use purrgress::cat_malloc::purr_train;
+use purrgress::cat_malloc::train_design;
+use purrgress::cat_malloc::train_route;
+use purrgress::cat_malloc::train_siding;
+use purrgress::cat_malloc::train_types;
 
+use purrgress::cat_malloc::train_types::PurrRule;
+use purrgress::types::PurrEvent;
+use purrgress::condition;
+
+use purrgress_macros::PurrStep;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 
@@ -49,22 +89,22 @@ pub enum MyStage {
     Idle,
     Walk,
     Run,
-    PurrChain(usize)
+    IWRChain(usize)
 }
 
 fn main() {
     let mut purr_train = purr_train::PurrTrain::new();
 
-    let mut purr_design = purr_train::PurrDesign::new();
+    let mut purr_design = train_design::PurrDesign::new();
 
-    let mut purr_route = purr_train::PurrRoute::new();
+    let mut purr_route = train_route::PurrRoute::new();
 
-    let mut purr_siding = purr_train::PurrSiding::new();
+    let mut purr_siding = train_siding::PurrSiding::new();
 
     design_single(&mut purr_design);
 
-    let purr_chain1box = purr_train::DesignBox::new(
-        purr_train::StandardRules::instant(),
+    let purr_chain1box = train_design::DesignBox::new(
+        train_types::StandardRules::instant(),
         Some(
             vec![
                 MyStage::Idle,
@@ -75,19 +115,19 @@ fn main() {
     );
     
     purr_design.chain(
-        MyStage::PurrChain(1), 
+        MyStage::IWRChain(1), 
         purr_chain1box
     );
 
     purr_route.construct_schedule(&purr_design).unwrap();
 
-    purr_siding.launch(MyStage::PurrChain(1), &purr_route).unwrap();
+    purr_siding.launch(MyStage::IWRChain(1), &purr_route).unwrap();
 
     purr_siding.find_index(MyStage::Run);
 
     let index_vec = purr_siding.get_switches();
 
-    purr_siding.change_rule(index_vec[0], purr_train::StandardRules::timer(2.0)).unwrap();
+    purr_siding.change_rule(index_vec[0], train_types::StandardRules::timer(2.0)).unwrap();
 
     purr_train.attach(&mut purr_siding);
 
@@ -106,32 +146,34 @@ fn main() {
     };
 }
 
-fn rule_update(purr_train: &mut purr_train::PurrTrain<MyStage>) {
-    let delta = 0.0006;
+fn rule_update(purr_train: &mut purr_train::PurrTrain<MyStage, train_types::StandardRules>) {
+    let delta = 0.00000006;
 
     if let Some(first) = purr_train.get_current_mut() {
-        match first.rule {
-            StandardRules::Timer(_) => first.rule.get_mut_timer().unwrap().tick(delta),
-            StandardRules::Flag(_) => first.rule.get_mut_flag().unwrap().set_flag(true),
-            _ => ()
+        if let Some(timer) = first.rule.as_mut_rule::<condition::PurrTimer>() {
+            timer.tick(delta);
+        };
+
+        if let Some(flag) = first.rule.as_mut_rule::<condition::PurrFlag>() {
+            flag.set_flag(true);
         };
     };
 }
 
-fn design_single(purr_design: &mut purr_train::PurrDesign<MyStage>) {
+fn design_single(purr_design: &mut train_design::PurrDesign<MyStage, train_types::StandardRules>) {
     purr_design.single(
         MyStage::Idle, 
-        purr_train::StandardRules::timer(2.0),
+        train_types::StandardRules::timer(2.0),
     );
 
     purr_design.single(
         MyStage::Walk, 
-        purr_train::StandardRules::timer(1.0),
+        train_types::StandardRules::timer(1.0),
     );
 
     purr_design.single(
         MyStage::Run, 
-        purr_train::StandardRules::timer(1.0),
+        train_types::StandardRules::timer(1.0),
     );
 }
 
@@ -234,9 +276,9 @@ fn get_delta_time(last_time: &mut time::Instant) -> f32 {
 
 ## Roadmap
 
-- [ ] Version `0.4.0`: Feature flag for async conditions powered by `tokio`.
+- [ ] Version `0.5.0`: Adaptation of the animator for the steam locomotive system, as well as other cool systems.
 
-- [ ] Версия `0.4.0`: Feature-флаг для асинхронных условий на базе `tokio`.
+- [ ] Версия `0.5.0`: Адаптация аниматора под систему паровозов, а также другие прикольные системы.
 
 ## ─── ВЫПОЛНЕНО / АРХИВ ───
 ### [v0.2.0]
@@ -250,3 +292,10 @@ fn get_delta_time(last_time: &mut time::Instant) -> f32 {
 
 * [x] Официальный плагин для интеграции с движком `bevy`. Ввиде компонент метки.
 * [x] Трехступенчатый паттерн для работы со спрайтами и анимациями. Даже больше! Фазы ограничены потребностями пользотеля!
+
+### [v0.4.0]
+* [x] A complete redesign of the manager: everything is now linear.
+* [x] Complete elimination of macro dependencies, making code easier to read and write.
+
+* [x] Полная переработка менеджера: перевод все на линейные паровозики.
+* [x] Полное избавление от макросо зависимости, облегчение читаемости и написания кода.

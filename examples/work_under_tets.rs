@@ -1,4 +1,6 @@
 use purrgress::cat_stage_manager::*;
+use purrgress::condition;
+use purrgress::types;
 use std::time;
 
 
@@ -11,7 +13,7 @@ pub enum MyStage {
     Run
 }
 
-impl manager_types::PurrStep for MyStage {}
+impl types::PurrStep for MyStage {}
 
 
 fn main() {
@@ -39,9 +41,9 @@ fn main() {
     // 4. Push the target stage (Idle and Walk will be added automatically)
     // 4. Пушим целевую стадию (автоматически добавятся Idle и Walk)
 
-    cat_manager.push(MyStage::Idle, manager_types::DuplicatePolicy::RemoveMatch);
-    cat_manager.push(MyStage::Run, manager_types::DuplicatePolicy::RemoveMatch);
-    cat_manager.insert(MyStage::Walk, manager_types::DuplicatePolicy::KeepAll, manager_types::InsertPosition::Index(1));
+    cat_manager.push(MyStage::Idle, types::DuplicatePolicy::RemoveMatch);
+    cat_manager.push(MyStage::Run, types::DuplicatePolicy::RemoveMatch);
+    cat_manager.insert(MyStage::Walk, types::DuplicatePolicy::KeepAll, types::InsertPosition::Index(1));
     println!("{:?}", cat_manager.current_vec_query());
 
     let mut last_time = time::Instant::now();
@@ -65,12 +67,12 @@ fn main() {
         // Обновляем менеджер каждый кадр
 
         match cat_manager.update() {
-            manager_types::PurrEvent::Idle => {
+            types::PurrEvent::Idle => {
                 println!("The queue is empty");
                 break;
             },
-            manager_types::PurrEvent::Running(_) => (),
-            manager_types::PurrEvent::Transition { from, to } => {
+            types::PurrEvent::Running(_) => (),
+            types::PurrEvent::Transition { from, to } => {
                 println!("The action {:?} is over", from);
                 if let Some(to) = to {
                     println!("Go to {:?}", to);

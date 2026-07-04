@@ -433,7 +433,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "anyhow",
  "bevy_ecs",
@@ -445,7 +445,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress-macros"
-version = "0.3.3"
+version = "0.4.1"
 dependencies = [
  "quote",
  "syn",

@@ -5,6 +5,12 @@ use purrgress_macros::PurrRule;
 
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
+pub enum BufferMode {
+    Clear,
+    Keep
+}
+
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone, PurrRule)]
 pub enum StandardRules {
     Instant(condition::InstantCondition),

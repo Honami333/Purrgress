@@ -11,7 +11,7 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone)]
 pub struct PurrRoute<T: PurrStep, U: PurrRule> {
-    pub(crate) schedule: HashMap<T, Vec<RouteBox<T, U>>>
+    pub schedule: HashMap<T, Vec<RouteBox<T, U>>>
 }
 
 impl<T, U> Default for PurrRoute<T, U> 
@@ -84,7 +84,7 @@ where
     }
 }
 
-
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone)]
 pub struct RouteBox<T: PurrStep, U: PurrRule> {
     pub rule: U,

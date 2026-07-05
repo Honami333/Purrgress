@@ -8,7 +8,7 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone)]
 pub struct PurrDesign<T: PurrStep, U: PurrRule> {
-    pub(crate) blueprints: HashMap<T, DesignBox<T, U>>
+    pub blueprints: HashMap<T, DesignBox<T, U>>
 }
 
 impl<T, U> Default for PurrDesign<T, U> 
@@ -43,6 +43,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone)]
 pub struct DesignBox<T: PurrStep, U: PurrRule> {
     pub rule: U,

@@ -3,6 +3,8 @@ use crate::types::InsertPosition;
 
 use cursorvec::CursorVec;
 
+use anyhow::{anyhow, Result};
+
 use super::train_route::*;
 use super::train_siding::*;
 use super::train_types::*;
@@ -11,7 +13,7 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug)]
 pub struct PurrTrain<T: PurrStep, U: PurrRule> {
-    line: CursorVec<RouteBox<T, U>>
+    pub line: CursorVec<RouteBox<T, U>>
 }
 
 impl<T, U> Default for PurrTrain<T, U> 
@@ -45,15 +47,17 @@ where
         self.line.extend(purr_siding.main_train.drain(..));
     }
 
-    pub fn reroute_at(&mut self, purr_siding: &mut PurrSiding<T, U>, insert_position: InsertPosition) {
+    pub fn reroute_at(&mut self, purr_siding: &mut PurrSiding<T, U>, insert_position: InsertPosition) -> Result<()> {
+        let Some(cursor_pos) = self.line.get_cursor() else { return Err( anyhow!("Cursor not found") ) };
+
         let index = match insert_position {
-            InsertPosition::Forward => 0_usize,
-            InsertPosition::Index(i) => i
+            InsertPosition::Forward => cursor_pos,
+            InsertPosition::Index(i) => i + cursor_pos
         };
 
-        for (i, route_box) in (index..).zip(purr_siding.main_train.drain(..)) {
-            self.line.insert(i, route_box);
-        };
+        self.line.splice(index..index, purr_siding.main_train.drain(..));
+
+        Ok(())
     }
 
     pub fn shrink_line(&mut self, line_length: usize) {
@@ -120,8 +124,6 @@ where
 
             return PurrEvent::Transition { from: carr, to: next_carriage };
         };
-        
-    
 
         PurrEvent::Idle
     }

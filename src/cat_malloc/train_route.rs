@@ -11,7 +11,9 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug, Clone)]
 pub struct PurrRoute<T: PurrStep, U: PurrRule> {
-    pub schedule: HashMap<T, Vec<RouteBox<T, U>>>
+    pub schedule: HashMap<T, Vec<RouteBox<T, U>>>,
+    pub bake_buffer: Vec<RouteBox<T, U>>,
+    pub visited_buffer: Vec<T>,
 }
 
 impl<T, U> Default for PurrRoute<T, U> 
@@ -31,7 +33,9 @@ where
 {
     pub fn new() -> Self {
         Self {
-            schedule: HashMap::new()
+            schedule: HashMap::new(),
+            bake_buffer: Vec::new(),
+            visited_buffer: Vec::new()
         }
     }
 
@@ -39,12 +43,12 @@ where
         self.schedule.clear();
 
         for parametr in purr_design.blueprints.keys() {
-            let mut route_vec = Vec::new();
-            let mut visited = Vec::new();
+            self.bake_buffer.clear();
+            self.visited_buffer.clear();
 
-            Self::bake_stage(parametr, purr_design, &mut route_vec, &mut visited)?;
+            Self::bake_stage(parametr, purr_design, &mut self.bake_buffer, &mut self.visited_buffer)?;
 
-            self.schedule.insert(*parametr, route_vec);
+            self.schedule.insert(*parametr, self.bake_buffer.clone());
         };
 
         Ok(())
@@ -53,31 +57,26 @@ where
     pub fn bake_stage(
         parametr: &T,
         purr_design: &PurrDesign<T, U>,
-        route_vec: &mut Vec<RouteBox<T, U>>,
-        visited: &mut Vec<T>
+        bake_buffer: &mut Vec<RouteBox<T, U>>,
+        visited_buffer: &mut Vec<T>
     ) -> Result<()> {
-        if visited.contains(parametr) {
+        if visited_buffer.contains(parametr) {
             return Err( anyhow!("Recursive stage error carriage: {:?}", *parametr) );
         };
 
         if let Some(design_box) = purr_design.blueprints.get(parametr) {
-            visited.push(*parametr);
+            visited_buffer.push(*parametr);
 
-            if let Some(route_box_vec) = &design_box.coupling {
-                for  route_box in route_box_vec {
-                    Self::bake_stage(
-                        route_box,
-                        purr_design,
-                        route_vec,
-                        visited
-                    )?;
+            if let Some(route_parametr_vec) = &design_box.coupling {
+                for route_parametr in route_parametr_vec {
+                    Self::bake_stage(route_parametr, purr_design, bake_buffer, visited_buffer)?;
                 };
             };
 
-            visited.pop();
+            visited_buffer.pop();
 
             let route_box = RouteBox::new(design_box.rule.clone(), *parametr);
-            route_vec.push(route_box);
+            bake_buffer.push(route_box);
         };
 
         Ok(())

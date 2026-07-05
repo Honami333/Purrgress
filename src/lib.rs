@@ -25,5 +25,3 @@ pub mod cat_stage_manager {
 
 pub mod condition;
 pub mod types;
-
-// scrap

@@ -61,9 +61,15 @@ where
     }
 
     pub fn shrink_line(&mut self, line_length: usize) {
-        self.line.clear();
+        if let Some(cursor_idx) = self.line.get_cursor() && cursor_idx > line_length {
+            
+            self.line.drain(0..cursor_idx); 
 
-        if self.line.capacity() > line_length {
+            self.line.set_cursor(0);
+            self.line.update_cursor();
+        };
+
+        if self.line.is_empty() {
             self.line.shrink_to_fit(); 
         };
     }

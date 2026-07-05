@@ -60,6 +60,8 @@ fn main() {
         };
 
         if purr_event == PurrEvent::Idle { break; };
+
+        purr_train.shrink_line(10000);
     };
 }
 

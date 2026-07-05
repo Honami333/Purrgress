@@ -61,7 +61,7 @@ where
     }
 
     pub fn shrink_line(&mut self, line_length: usize) {
-        if let Some(cursor_idx) = self.line.get_cursor() && cursor_idx > line_length {
+        if let Some(cursor_idx) = self.line.get_cursor() && cursor_idx > line_length && cursor_idx != 0 {
             
             self.line.drain(0..cursor_idx); 
 
@@ -118,7 +118,7 @@ where
             self.line.update_cursor();
 
             if i == self.line.len() - 1 { 
-                self.shrink_line(1000);
+                self.shrink_line(1);
                 
                 self.line.clear();
                 return PurrEvent::Transition { from: carr, to: None };

@@ -42,7 +42,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.4.21", features = ["train"] }
+purrgress = { version = "0.4.22", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи

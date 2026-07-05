@@ -98,6 +98,7 @@ where
 
     pub fn advance_train(&mut self) -> PurrEvent<T> {
         let current_idx = self.line.get_cursor();
+
         let mut is_finished = false;
         let mut carriage = None;
 
@@ -113,14 +114,15 @@ where
         };
 
         if let Some(i) = current_idx && let Some(carr) = carriage && is_finished {
-            if let Some(i) = current_idx && i == self.line.len() - 1 { 
-                self.shrink_line(1000);
-                
-                return PurrEvent::Transition { from: carr, to: None };
-            };
-
             self.line.set_cursor(i + 1);
             self.line.update_cursor();
+
+            if i == self.line.len() - 1 { 
+                self.shrink_line(1000);
+                
+                self.line.clear();
+                return PurrEvent::Transition { from: carr, to: None };
+            };
 
             let cursor_state = self.line.get_current();
 

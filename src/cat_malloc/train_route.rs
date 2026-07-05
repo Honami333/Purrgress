@@ -39,8 +39,8 @@ where
         }
     }
 
-    pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>) -> Result<()> {
-        self.schedule.clear();
+    pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>, buffer_mode: BufferMode) -> Result<()> {
+        if matches!(buffer_mode, BufferMode::Clear) { self.schedule.clear(); };
 
         for parametr in purr_design.blueprints.keys() {
             self.bake_buffer.clear();

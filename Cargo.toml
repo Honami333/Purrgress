@@ -1,6 +1,6 @@
 [package]
 name = "purrgress"
-version = "0.4.22"
+version = "0.4.23"
 edition = "2024"
 
 documentation = "https://docs.rs"
@@ -23,18 +23,18 @@ exclude = [
 [dependencies]
 bevy_ecs  = { version = "0.18", optional = true, default-features = false }
 
-petgraph = "0.8.3"
+petgraph = { version = "0.8.3", optional = true }
 dyn-clone = "1.0"
 purrgress-macros = { version = "0.4.1", path = "./purrgress-macros", optional = true  }
-cursorvec = "0.2.0"
+cursorvec = { version = "0.2.0", optional = true }
 anyhow = "1.0.103"
 
 [features]
 default = []
 bevy_ecs = ["dep:bevy_ecs"]
-train = ["purrgress-macros/train", "macros"]
-animator = ["purrgress-macros/animator", "scrap", "macros"]
-scrap = ["purrgress-macros/scrap", "macros"]
+train = ["purrgress-macros/train", "macros", "dep:cursorvec"]
+animator = ["purrgress-macros/animator", "scrap", "macros", "dep:petgraph"]
+scrap = ["purrgress-macros/scrap", "macros", "dep:petgraph"]
 macros = ["dep:purrgress-macros"]
 
 [[example]]

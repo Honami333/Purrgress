@@ -36,7 +36,7 @@ fn main() {
     
     purr_design.chain(MyStage::IWRChain, purr_iwr_chain);
 
-    purr_route.construct_schedule(&purr_design).unwrap();
+    purr_route.construct_schedule(&purr_design, BufferMode::Keep).unwrap();
 
     purr_siding.launch(MyStage::IWRChain, BufferMode::Clear, &purr_route).unwrap();
 

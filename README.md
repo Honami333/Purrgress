@@ -42,7 +42,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.4.22", features = ["train"] }
+purrgress = { version = "0.4.23", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи
@@ -108,7 +108,7 @@ fn main() {
     
     purr_design.chain(MyStage::IWRChain, purr_iwr_chain);
 
-    purr_route.construct_schedule(&purr_design).unwrap();
+    purr_route.construct_schedule(&purr_design, BufferMode::Keep).unwrap();
 
     purr_siding.launch(MyStage::IWRChain, BufferMode::Clear, &purr_route).unwrap();
 

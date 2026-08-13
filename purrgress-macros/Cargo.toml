@@ -1,6 +1,6 @@
 [package]
 name = "purrgress-macros"
-version = "0.4.1"
+version = "0.5.0"
 edition = "2024"
 
 documentation = "https://docs.rs"
@@ -28,3 +28,4 @@ quote = "1.0"
 train = []
 animator = []
 scrap = []
+dispatcher = []

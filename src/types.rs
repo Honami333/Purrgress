@@ -38,6 +38,7 @@ pub trait PurrStep: Debug + Copy + Clone + PartialEq + Eq + Hash {}
 /// cat_manager.push(MyStage::Walk, manager_types::DuplicatePolicy::RemoveMatch);
 /// // print [Idle, Walk]
 /// ```
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DuplicatePolicy  {
     KeepAll,
@@ -67,6 +68,7 @@ pub enum DuplicatePolicy  {
 /// cat_manager.insert(MyStage::Walk, manager_types::DuplicatePolicy::KeepAll, manager_types::InsertPosition::Index(1));
 /// // print [Idle, Idle, Walk, Walk]
 /// ```
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InsertPosition {
     Forward,
@@ -107,6 +109,7 @@ pub enum InsertPosition {
 ///     };
 /// }
 /// ```
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PurrEvent<T> {
     Idle,
@@ -154,6 +157,7 @@ pub enum PurrEvent<T> {
 ///     !manager_types::DuplicatePolicy::RemoveMatch
 /// );
 /// ```
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PurrAction {
     Push,
@@ -224,6 +228,7 @@ pub enum PurrAction {
 ///     };
 /// }
 /// ```
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RumblePolicy {
     StrictOrder,
@@ -232,6 +237,8 @@ pub enum RumblePolicy {
 
 /// #PurrVec
 /// // Vector2 with values ​​in the form of x and y coordinates
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PurrVec {
     pub x: f32,

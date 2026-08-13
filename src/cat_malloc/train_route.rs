@@ -8,8 +8,11 @@ use super::train_design::*;
 use super::train_types::*;
 
 
+
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PurrRoute<T: PurrStep, U: PurrRule> {
     pub schedule: HashMap<T, Vec<RouteBox<T, U>>>,
     pub bake_buffer: Vec<RouteBox<T, U>>,
@@ -22,7 +25,7 @@ where
     U: PurrRule
 {
     fn default() -> Self {
-        Self::new()
+        Self::new(VECTOR_SIZE)
     }
 }
 
@@ -31,11 +34,11 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn new() -> Self {
+    pub fn new(size: usize) -> Self {
         Self {
             schedule: HashMap::new(),
-            bake_buffer: Vec::new(),
-            visited_buffer: Vec::new()
+            bake_buffer: Vec::with_capacity(size),
+            visited_buffer: Vec::with_capacity(size)
         }
     }
 
@@ -84,7 +87,9 @@ where
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RouteBox<T: PurrStep, U: PurrRule> {
     pub rule: U,
     pub carriage: T

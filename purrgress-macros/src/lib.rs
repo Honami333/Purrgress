@@ -1,8 +1,13 @@
 use proc_macro;
 
+#[cfg(feature = "dispatcher")]
+mod cat_telegraph {
+    pub(crate) mod dispatcher;
+}
+
 #[cfg(feature = "train")]
 mod cat_malloc {
-    pub (crate) mod purr_train;
+    pub(crate) mod purr_train;
 }
 
 #[cfg(feature = "animator")]
@@ -21,6 +26,12 @@ mod cat_stage_manager {
     #[cfg(feature = "scrap")] pub(crate) mod purr_engine;
 
     pub(crate) mod step;
+}
+
+#[cfg(feature = "train")]
+#[proc_macro_derive(PurrKey)]
+pub fn derive_purr_key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    cat_telegraph::dispatcher::derive_purr_key_impl(input)
 }
 
 #[cfg(feature = "train")]

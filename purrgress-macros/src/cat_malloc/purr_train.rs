@@ -7,8 +7,8 @@ pub fn derive_purr_rule_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
     let enum_item = syn::parse_macro_input!(input as syn::ItemEnum);
 
     let enum_name = &enum_item.ident;
-
     let enum_variants_iter = enum_item.variants;
+    let (impl_generics, ty_generics, where_clause) = enum_item.generics.split_for_impl();
 
     let unpack_rule_trait = enum_variants_iter.iter().map(|variant| {
         let variant_name = &variant.ident;
@@ -21,7 +21,9 @@ pub fn derive_purr_rule_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
         };
 
         quote::quote! {
-            impl purrgress::cat_malloc::train_types::UnpackRule<#inner_type> for #enum_name {
+            impl #impl_generics purrgress::cat_malloc::train_types::UnpackRule<#inner_type> for #enum_name #ty_generics
+            #where_clause
+            {
                 fn unpack_ref(&self) -> Option<&#inner_type> {
                     if let Self::#variant_name(field) = self { Some(&field) } else { None }
                 }
@@ -44,8 +46,10 @@ pub fn derive_purr_rule_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
     let expanded = quote::quote! {
         #(#unpack_rule_trait)*
         
-        impl purrgress::cat_malloc::train_types::PurrRule for #enum_name {
-            fn is_finished(&mut self) -> bool {
+        impl #impl_generics purrgress::cat_malloc::train_types::PurrRule for #enum_name #ty_generics
+        #where_clause
+        {
+            fn is_finished(&self) -> bool {
                 match self {
                     #(#is_finished),*
                 }

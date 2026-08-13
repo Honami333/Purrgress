@@ -22,13 +22,20 @@ use crate::types::PurrVec;
 ///     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 /// }
 pub trait PurrCondition: Debug {
-    fn is_finished(&mut self) -> bool;
+    fn is_finished(&self) -> bool;
     fn reset(&mut self);
+}
 
-    #[cfg(feature = "scrap")]
+#[cfg(feature = "scrap")]
+pub trait PurrConditionAny: PurrCondition + 'static {
     fn as_any(&self) -> &(dyn std::any::Any + 'static);
-    #[cfg(feature = "scrap")]
     fn as_any_mut(&mut self) -> &mut (dyn std::any::Any + 'static);
+}
+
+#[cfg(feature = "scrap")]
+impl<T: PurrCondition + 'static> PurrConditionAny for T {
+    fn as_any(&self) -> &(dyn std::any::Any + 'static) { self }
+    fn as_any_mut(&mut self) -> &mut (dyn std::any::Any + 'static) { self }
 }
 
 /// # Example of InstantCondition usage
@@ -48,18 +55,14 @@ pub trait PurrCondition: Debug {
 /// let idle_condition = condition::InstantCondition;
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct InstantCondition;
 
 impl PurrCondition for InstantCondition {
-    fn is_finished(&mut self) -> bool { true }
-
+    fn is_finished(&self) -> bool { true }
     fn reset(&mut self) {}
-
-    #[cfg(feature = "scrap")]
-    fn as_any(&self) -> &dyn std::any::Any { self }
-    #[cfg(feature = "scrap")]
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }
 
 /// # Example of PurrTimer usage
@@ -78,7 +81,9 @@ impl PurrCondition for InstantCondition {
 /// let idle_condition = condition::PurrTimer::new(1.0);;
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PurrTimer {
     duration: f32,
     time_left: f32,
@@ -98,22 +103,20 @@ impl PurrTimer {
         }
     }
 
-    pub fn tick(&mut self, delta: f32) {
-        self.time_left += delta;
-    }
+    pub fn tick(&mut self, delta: f32) { self.time_left += delta; }
 }
 
 impl PurrTimer {
-    pub fn get_duration(&self) -> &f32 {
-        &self.duration
+    pub fn get_duration(&self) -> f32 {
+        self.duration
     }
 
     pub fn get_duration_mut(&mut self) -> &mut f32 {
         &mut self.duration
     }
 
-    pub fn get_time_left(&self) -> &f32 {
-        &self.time_left
+    pub fn get_time_left(&self) -> f32 {
+        self.time_left
     }
 
     pub fn get_time_left_mut(&mut self) -> &mut f32 {
@@ -122,21 +125,9 @@ impl PurrTimer {
 }
 
 impl PurrCondition for PurrTimer {
-    fn is_finished(&mut self) -> bool {
-        if self.time_left < self.duration { return  false; }
-        
-        self.reset();
-        true
-    }
+    fn is_finished(&self) -> bool { self.time_left >= self.duration }
 
-    fn reset(&mut self) {
-        self.time_left = 0.0;
-    }
-
-    #[cfg(feature = "scrap")]
-    fn as_any(&self) -> &dyn std::any::Any { self }
-    #[cfg(feature = "scrap")]
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
+    fn reset(&mut self) { self.time_left = 0.0; }
 }
 
 /// # Example of PurrFlag usage
@@ -155,7 +146,9 @@ impl PurrCondition for PurrTimer {
 /// let idle_condition = condition::PurrFlag::new();
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PurrFlag {
     select_flag: bool,
 }
@@ -187,18 +180,13 @@ impl PurrFlag {
 }
 
 impl PurrCondition for PurrFlag {
-    fn is_finished(&mut self) -> bool {
+    fn is_finished(&self) -> bool {
         self.select_flag
     }
 
     fn reset(&mut self) {
         self.select_flag = false;
     }
-
-    #[cfg(feature = "scrap")]
-    fn as_any(&self) -> &dyn std::any::Any { self }
-    #[cfg(feature = "scrap")]
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }
 
 /// # Example of PurrProximity usage
@@ -228,7 +216,9 @@ impl PurrCondition for PurrFlag {
 /// 
 /// cat_manager.set_condition(MyStage::Idle, idle_condition);
 /// ```
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PurrProximity {
     pos: PurrVec,
     start_pos: PurrVec,
@@ -316,7 +306,7 @@ impl PurrProximity {
 }
 
 impl PurrCondition for PurrProximity {
-    fn is_finished(&mut self) -> bool {
+    fn is_finished(&self) -> bool {
         let forward_x = self.target_pos.x >= self.start_pos.x;
         let forward_y = self.target_pos.y >= self.start_pos.y;
 
@@ -336,9 +326,4 @@ impl PurrCondition for PurrProximity {
     fn reset(&mut self) {
         self.pos = self.start_pos;
     }
-
-    #[cfg(feature = "scrap")]
-    fn as_any(&self) -> &dyn std::any::Any { self }
-    #[cfg(feature = "scrap")]
-    fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 }

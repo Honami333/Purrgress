@@ -5,7 +5,6 @@ use purrgress::cat_malloc::train_siding;
 use purrgress::cat_malloc::train_types;
 
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
-use purrgress::types::PurrEvent;
 use purrgress::condition;
 
 use purrgress_macros::PurrStep;
@@ -23,9 +22,9 @@ fn main() {
 
     let mut purr_design = train_design::PurrDesign::new();
 
-    let mut purr_route = train_route::PurrRoute::new();
+    let mut purr_route = train_route::PurrRoute::new(8);
 
-    let mut purr_siding = train_siding::PurrSiding::new();
+    let mut purr_siding = train_siding::PurrSiding::new(8);
 
     design_single(&mut purr_design);
 
@@ -46,7 +45,6 @@ fn main() {
 
     purr_siding.change_rule(index_vec[0], train_types::StandardRules::timer(2.0)).unwrap();
 
-    purr_train.attach(&mut purr_siding);
 
     println!("{purr_train:?}");
 
@@ -55,11 +53,14 @@ fn main() {
 
         let purr_event = purr_train.advance_train();
 
-        if let PurrEvent::Transition { .. } = purr_event {
+        if let train_types::PurrTrainEvent::Transition { .. } = purr_event {
             println!("{purr_event:?}");
         };
 
-        if purr_event == PurrEvent::Idle { break; };
+        if purr_event == train_types::PurrTrainEvent::Idle {
+            purr_siding.launch(MyStage::IWRChain, BufferMode::Clear, &purr_route).unwrap();
+            purr_train.attach(&mut purr_siding);
+        };
 
         purr_train.shrink_line(10000);
     };
@@ -68,12 +69,12 @@ fn main() {
 fn rule_update(purr_train: &mut purr_train::PurrTrain<MyStage, train_types::StandardRules>) {
     let delta = 0.00000006;
 
-    if let Some(first) = purr_train.get_current_mut() {
-        if let Some(timer) = first.rule.as_mut_rule::<condition::PurrTimer>() {
+    if let Some(route_box) = purr_train.get_current_mut() {
+        if let Some(timer) = route_box.rule.as_mut_rule::<condition::PurrTimer>() {
             timer.tick(delta);
         };
 
-        if let Some(flag) = first.rule.as_mut_rule::<condition::PurrFlag>() {
+        if let Some(flag) = route_box.rule.as_mut_rule::<condition::PurrFlag>() {
             flag.set_flag(true);
         };
     };

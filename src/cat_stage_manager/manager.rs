@@ -19,7 +19,7 @@ pub struct StageManager<T: PurrStep> {
     pub(crate) vector_stage: Vec<T>,
     pub(crate) graph: DiGraph<T, ()>,
     pub(crate) nodes: HashMap<T, NodeIndex>,
-    pub(crate) conditions: HashMap<T, Box<dyn PurrCondition + Send + Sync>>,
+    pub(crate) conditions: HashMap<T, Box<dyn PurrConditionAny + Send + Sync>>,
     pub(crate) sub_managers: HashMap<usize, Box<StageManager<T>>>,
 }
 

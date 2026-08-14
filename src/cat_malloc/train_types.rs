@@ -24,7 +24,7 @@ pub enum BufferMode {
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, PurrRule)]
+#[derive(Debug, Clone, Copy, PartialEq, PurrRule)]
 pub enum StandardRules {
     Instant(condition::InstantCondition),
     Flag(condition::PurrFlag),
@@ -50,11 +50,9 @@ impl StandardRules {
     }
 }
 
-pub trait PurrRule: Debug + Clone + PartialEq {
+pub trait PurrRule: Debug + Clone + Copy + PartialEq {
     fn is_finished(&self) -> bool;
-
     fn as_ref_rule<C>(&self) -> Option<&C> where Self: UnpackRule<C> { self.unpack_ref() }
-
     fn as_mut_rule<C>(&mut self) -> Option<&mut C> where Self: UnpackRule<C> { self.unpack_mut() }
 }
 
@@ -88,7 +86,7 @@ pub enum TrackCapacity {
     Cap2048
 }
 
-pub trait PurrTrack<V: Clone> {
+pub trait PurrTrack<V: Clone + Copy> {
     fn tr_new() -> Self;
     fn tr_with_capacity(size: TrackCapacity) -> Self;
 
@@ -116,7 +114,7 @@ pub trait PurrTrack<V: Clone> {
     fn tr_clear(&mut self);
 }
 
-impl<V: Clone> PurrTrack<V> for CursorVec<V> {
+impl<V: Clone + Copy> PurrTrack<V> for CursorVec<V> {
     fn tr_new() -> Self { CursorVec::new() }
     fn tr_with_capacity(_size: TrackCapacity) -> Self { CursorVec::new() }
 
@@ -130,13 +128,13 @@ impl<V: Clone> PurrTrack<V> for CursorVec<V> {
         self.tr_set_cursor(index + 1);
     }
 
-    fn tr_get(&self, index: usize) -> Option<V> { self.get(index).cloned() }
+    fn tr_get(&self, index: usize) -> Option<V> { self.get(index).copied() }
     fn tr_get_ref(&self, index: usize) -> Option<&V> { self.get(index) }
     fn tr_get_mut(&mut self, index: usize) -> Option<&mut V> { self.get_mut(index) }
 
     fn tr_get_current(&self) -> Option<V> { 
         let index = self.tr_get_cursor();
-        self.get(index).cloned()
+        self.get(index).copied()
     }
     fn tr_get_current_ref(&self) -> Option<&V> { 
         let index = self.tr_get_cursor();

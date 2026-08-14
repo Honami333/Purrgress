@@ -1,4 +1,3 @@
-
 # Purrgress
 
 ### English
@@ -11,7 +10,6 @@ Tailored for real-time applications and game loops where frame budget and memory
 * **Graph Baking:** Heavy recursive lookups run once. Ready routes are cached and copied in O(1).
 * **Isolated Sidings (`PurrSiding`):** A dedicated buffer for train assembly and modification before switching to the main track.
 * **Cursor-Based Queues:** Completed stages stay in place while the locomotive advances (0 ns transitions).
-
 
 ### Русский
 
@@ -50,7 +48,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.5.0", features = ["train"] }
+purrgress = { version = "0.5.1", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи
@@ -324,16 +322,17 @@ pub async fn run_client(
     // Выгружаем цепочку в буфер
     // Offloading the chain into buffer
     siding.launch(MyStage::Disconnect, train_types::BufferMode::Clear, &purr_route).unwrap();
-    // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
-    // Важно читайте предупреждение!
-    // Serialization via rkyv into Bytes was chosen for maximum speed
-    // Important: read the warning!
-    let bytes = station_link::PurrStation::<MyStage, TrackRule<MyKey>, MyKey>::siding_to_byte(&mut siding)?;
 
     if let Some(dispatcher_types::DispatcherReply::PurrStation { rx_reply }) = route_link {
         // Создаем новую станцию line это просто копия из линка
         // Create a new station; line is just a copy from link
         let mut station = station_link::PurrStation::new(line, rx_reply, key);
+
+        // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
+        // Важно читайте предупреждение!
+        // Serialization via rkyv into Bytes was chosen for maximum speed
+        // Important: read the warning!
+        let bytes = station.siding_to_byte(&mut siding)?;
         // Отправляем команду о прикреплении вагона к основному поезду
         // Send command to attach carriage to main train
         let _ = station.send_command(dispatcher_types::DispatcherCommand::Attach { siding_data: bytes, key: station.get_key() }).await?;
@@ -396,8 +395,10 @@ pub async fn run_client(
 ## Roadmap
 
 - [ ] Version `0.6.0`: Implementation of a custom circular vector to fix the main problem of CursorVector.
+- [ ] Версия `0.6.0`: Further deserialization optimizations: conditions are now 100% Copy, enabling guaranteed extraction with near-safe zero-overhead unwrapping.
 
 - [ ] Версия `0.6.0`: Реализация кастомного зацикленного вектора для фикса главной проблемы CursorVector.
+- [ ] Версия `0.6.0`: Еще большая оптимизация дисереализации, так как условия стали 100% копированием + гарантированное извлечение хоть и почти бесопасного, но разворачивания. и это
 
 ## ─── ВЫПОЛНЕНО / АРХИВ ───
 ### [v0.2.0]

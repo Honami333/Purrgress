@@ -5,7 +5,7 @@ use purrgress::condition::{self, PurrCondition};
 
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, PurrRule)]
+#[derive(Debug, Clone, Copy, PartialEq, PurrRule)]
 pub enum TrackRule<Y: PurrKey> {
     Instant(condition::InstantCondition),
     Timer(condition::PurrTimer),

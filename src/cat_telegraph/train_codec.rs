@@ -28,12 +28,17 @@ where
             + Deserialize<U, HighDeserializer<RkyvError>>,
     S: PurrTrack<RouteBox<T, U>>
 {
-    pub fn attach_bytes(&mut self, bytes: Bytes) -> Result<(), PurrError> {
-        let archived  = rkyv::access::<rkyv::Archived<Vec<RouteBox<T, U>>>, RkyvError>(&bytes)
+    pub fn deserialize<'a>(bytes: &'a Bytes) -> Result<impl Iterator<Item = RouteBox<T, U>>, PurrError> where T: 'a, U: 'a {
+        let archived  = rkyv::access::<rkyv::Archived<Vec<RouteBox<T, U>>>, RkyvError>(bytes)
             .map_err(|e| PurrError::Internal(e.to_string()))?;
         let de_archived = archived.iter().map(|archived_state| {
             rkyv::deserialize::<RouteBox<T, U>, RkyvError>(archived_state).unwrap()
         });
+        Ok(de_archived)
+    }
+    
+    pub fn attach_bytes(&mut self, bytes: Bytes) -> Result<(), PurrError> {
+        let de_archived = Self::deserialize(&bytes)?;
         self.line.tr_extend(de_archived);
         Ok(())
     }
@@ -51,11 +56,7 @@ where
         };
         index = index.min(self.line.tr_len());
 
-        let archived  = rkyv::access::<rkyv::Archived<Vec<RouteBox<T, U>>>, RkyvError>(&bytes)
-            .map_err(|e| PurrError::Internal(e.to_string()))?;
-        let de_archived = archived.iter().map(|archived_state| {
-            rkyv::deserialize::<RouteBox<T, U>, RkyvError>(archived_state).unwrap()
-        });
+        let de_archived = Self::deserialize(&bytes)?;
         self.line.tr_splice(index..index, de_archived);
         Ok(())
     }

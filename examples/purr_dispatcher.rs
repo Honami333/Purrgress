@@ -140,16 +140,17 @@ pub async fn run_client(
     // Выгружаем цепочку в буфер
     // Offloading the chain into buffer
     siding.launch(MyStage::Disconnect, train_types::BufferMode::Clear, &purr_route).unwrap();
-    // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
-    // Важно читайте предупреждение!
-    // Serialization via rkyv into Bytes was chosen for maximum speed
-    // Important: read the warning!
-    let bytes = station_link::PurrStation::<MyStage, TrackRule<MyKey>, MyKey>::siding_to_byte(&mut siding)?;
 
     if let Some(dispatcher_types::DispatcherReply::PurrStation { rx_reply }) = route_link {
         // Создаем новую станцию line это просто копия из линка
         // Create a new station; line is just a copy from link
         let mut station = station_link::PurrStation::new(line, rx_reply, key);
+
+        // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
+        // Важно читайте предупреждение!
+        // Serialization via rkyv into Bytes was chosen for maximum speed
+        // Important: read the warning!
+        let bytes = station.siding_to_byte(&mut siding)?;
         // Отправляем команду о прикреплении вагона к основному поезду
         // Send command to attach carriage to main train
         let _ = station.send_command(dispatcher_types::DispatcherCommand::Attach { siding_data: bytes, key: station.get_key() }).await?;

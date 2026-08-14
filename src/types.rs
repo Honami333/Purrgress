@@ -1,6 +1,7 @@
 use std::hash::Hash;
 use std::fmt::Debug;
 
+
 // A structural file containing policies as enums
 //  Custom structures similar to Vec2
 //  And the main trait for stages

@@ -21,7 +21,7 @@ use super::dispatcher_types::*;
 #[derive(Debug)]
 pub struct KeySenderReply<T: PurrStep, U: PurrRule, C: PurrKey> {
     pub sender: Option<Sender<DispatcherReply<T, U>>>,
-    pub key: C
+    pub key: C,
 }
 
 impl<T: PurrStep, U: PurrRule, C: PurrKey> Default for KeySenderReply<T, U, C> {
@@ -54,6 +54,7 @@ where
 pub struct PurrStation<T: PurrStep, U: PurrRule, C: PurrKey> {
     pub main_channel: Sender<DispatcherCommand<C>>,
     pub my_channel: Receiver<DispatcherReply<T, U>>,
+    pub archive: AlignedVec,
     pub key: C
 }
 
@@ -64,12 +65,14 @@ where
     C: PurrKey
 {
     pub fn new(main_channel: Sender<DispatcherCommand<C>>, my_channel: Receiver<DispatcherReply<T, U>>, key: C) -> Self {
-        Self { main_channel, my_channel, key }
+        Self { main_channel, my_channel, archive: AlignedVec::new(), key }
     }
 
-    pub fn siding_to_byte(purr_siding: &mut PurrSiding<T, U>) -> Result<bytes::Bytes, PurrError> {
-        let archive = rkyv::to_bytes(&purr_siding.main_train).map_err(|e| PurrError::Internal(e.to_string()))?;
-        let bytes = bytes::Bytes::copy_from_slice(&archive);
+    pub fn siding_to_byte(&mut self, purr_siding: &mut PurrSiding<T, U>) -> Result<bytes::Bytes, PurrError> {
+        self.archive.clear();
+        let archive = std::mem::take(&mut self.archive);
+        rkyv::api::high::to_bytes_in(&purr_siding.main_train, archive).map_err(|e| PurrError::Internal(e.to_string()))?;
+        let bytes = bytes::Bytes::copy_from_slice(&self.archive);
         purr_siding.main_train.clear();
         Ok(bytes)
     }

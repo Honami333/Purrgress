@@ -21,19 +21,25 @@ use crate::types::PurrVec;
 ///     fn as_any(&self) -> &dyn std::any::Any { self }
 ///     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 /// }
-pub trait PurrCondition: Debug {
+pub trait PurrCondition: Debug + Clone + Copy {
     fn is_finished(&self) -> bool;
     fn reset(&mut self);
 }
 
 #[cfg(feature = "scrap")]
-pub trait PurrConditionAny: PurrCondition + 'static {
+pub trait PurrConditionBase: Debug {
+    fn is_finished(&self) -> bool;
+    fn reset(&mut self);
+}
+
+#[cfg(feature = "scrap")]
+pub trait PurrConditionAny: PurrConditionBase + 'static + Send + Sync {
     fn as_any(&self) -> &(dyn std::any::Any + 'static);
     fn as_any_mut(&mut self) -> &mut (dyn std::any::Any + 'static);
 }
 
 #[cfg(feature = "scrap")]
-impl<T: PurrCondition + 'static> PurrConditionAny for T {
+impl<T: PurrConditionBase + 'static + Send + Sync> PurrConditionAny for T {
     fn as_any(&self) -> &(dyn std::any::Any + 'static) { self }
     fn as_any_mut(&mut self) -> &mut (dyn std::any::Any + 'static) { self }
 }
@@ -61,6 +67,12 @@ impl<T: PurrCondition + 'static> PurrConditionAny for T {
 pub struct InstantCondition;
 
 impl PurrCondition for InstantCondition {
+    fn is_finished(&self) -> bool { true }
+    fn reset(&mut self) {}
+}
+
+#[cfg(feature = "scrap")]
+impl PurrConditionBase for InstantCondition {
     fn is_finished(&self) -> bool { true }
     fn reset(&mut self) {}
 }
@@ -130,6 +142,13 @@ impl PurrCondition for PurrTimer {
     fn reset(&mut self) { self.time_left = 0.0; }
 }
 
+#[cfg(feature = "scrap")]
+impl PurrConditionBase for PurrTimer {
+    fn is_finished(&self) -> bool { self.time_left >= self.duration }
+
+    fn reset(&mut self) { self.time_left = 0.0; }
+}
+
 /// # Example of PurrFlag usage
 ///
 /// ```rust
@@ -180,13 +199,14 @@ impl PurrFlag {
 }
 
 impl PurrCondition for PurrFlag {
-    fn is_finished(&self) -> bool {
-        self.select_flag
-    }
+    fn is_finished(&self) -> bool { self.select_flag }
+    fn reset(&mut self) { self.select_flag = false; }
+}
 
-    fn reset(&mut self) {
-        self.select_flag = false;
-    }
+#[cfg(feature = "scrap")]
+impl PurrConditionBase for PurrFlag {
+    fn is_finished(&self) -> bool { self.select_flag }
+    fn reset(&mut self) { self.select_flag = false; }
 }
 
 /// # Example of PurrProximity usage
@@ -306,6 +326,30 @@ impl PurrProximity {
 }
 
 impl PurrCondition for PurrProximity {
+    fn is_finished(&self) -> bool {
+        let forward_x = self.target_pos.x >= self.start_pos.x;
+        let forward_y = self.target_pos.y >= self.start_pos.y;
+
+        let tx = self.target_pos.x;
+        let ty = self.target_pos.y;
+        let px = self.pos.x;
+        let py = self.pos.y;
+
+        match (forward_x, forward_y) {
+            (true, true) => px >= tx && py >= ty,
+            (true, false) => px >= tx && py < ty,
+            (false, true) => px < tx && py >= ty,
+            (false, false) => px < tx && py < ty,
+        }
+    }
+
+    fn reset(&mut self) {
+        self.pos = self.start_pos;
+    }
+}
+
+#[cfg(feature = "scrap")]
+impl PurrConditionBase for PurrProximity {
     fn is_finished(&self) -> bool {
         let forward_x = self.target_pos.x >= self.start_pos.x;
         let forward_y = self.target_pos.y >= self.start_pos.y;

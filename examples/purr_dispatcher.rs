@@ -6,7 +6,7 @@ use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
 use purrgress::cat_telegraph::station_link;
 use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
-use purrgress::PurrStep;
+use purrgress::cat_malloc::purr_train::PurrStep;
 
 use rkyv::{Archive, Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;

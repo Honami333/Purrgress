@@ -6,6 +6,9 @@ use crate::types;
 
 use super::*;
 
+pub use purrgress_macros::{purr_pandemonium, abyssal_grimoire, purr_rumble_brimstone, abyssal_march};
+
+
 // This file contains all the animator metadata, which serves to:
 //  Synchronize stages
 //  Stitch logic together

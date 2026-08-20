@@ -1,7 +1,5 @@
 extern crate self as purrgress;
 
-pub use purrgress_macros::*;
-
 
 #[cfg(feature = "dispatcher")]
 pub mod cat_telegraph {

@@ -9,6 +9,9 @@ use super::train_route::*;
 use super::train_siding::*;
 use super::train_types::*;
 
+pub use purrgress_macros::{PurrStep, PurrRule};
+
+
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]

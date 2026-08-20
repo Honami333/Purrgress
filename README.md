@@ -48,7 +48,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.5.12", features = ["train"] }
+purrgress = { version = "0.5.22", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи
@@ -94,7 +94,7 @@ use purrgress::cat_malloc::train_types;
 
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
 use purrgress::condition;
-use purrgress::cat_malloc::purr_train::PurrStep;
+use purrgress::PurrStep;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 pub enum MyStage {
@@ -182,7 +182,7 @@ use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
 use purrgress::cat_telegraph::station_link;
 use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
-use purrgress::cat_malloc::purr_train::PurrStep;
+use purrgress::PurrStep;
 
 use rkyv::{Archive, Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;

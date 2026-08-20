@@ -1,4 +1,4 @@
-use purrgress::cat_stage_manager::manager::{meowphosis, PurrStep};
+use purrgress::{meowphosis, PurrStep};
 use purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage;
 use purrgress::types;
 use std::collections::HashMap;

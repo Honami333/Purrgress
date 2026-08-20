@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use crate::condition::*;
 use crate::types::*;
 
-pub use purrgress_macros::{purr_pounce, purr_tentacle, purr_rumble, new_purr_chain, meowphosis, PurrStep};
-
 
 // The crate's root file containing the manager structure
 //  Graph operations

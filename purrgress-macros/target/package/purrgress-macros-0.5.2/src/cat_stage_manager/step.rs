@@ -1,0 +1,18 @@
+use quote;
+use proc_macro;
+use syn;
+
+
+// A macro for automatic implementation of the PurrStep trait for your enum as a derive
+pub fn derive_purr_step_impl(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = syn::parse_macro_input!(input as syn::DeriveInput);
+
+    let name = &input.ident;
+    let (impl_genetics, ty_generics, where_clauses) = &input.generics.split_for_impl();
+
+    let expanded = quote::quote! {
+        impl #impl_genetics purrgress::types::PurrStep for #name #ty_generics #where_clauses {}
+    };
+
+    proc_macro::TokenStream::from(expanded)
+}

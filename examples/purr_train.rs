@@ -6,7 +6,7 @@ use purrgress::cat_malloc::train_types;
 
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
 use purrgress::condition;
-use purrgress::cat_malloc::purr_train::PurrStep;
+use purrgress::PurrStep;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 pub enum MyStage {

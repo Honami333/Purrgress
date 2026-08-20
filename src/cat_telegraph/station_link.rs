@@ -9,6 +9,8 @@ use rkyv::util::AlignedVec;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::mpsc::Receiver;
 
+use wibr::{New, Make};
+
 use crate::types::PurrStep;
 
 use crate::cat_malloc::train_siding::*;
@@ -18,18 +20,15 @@ use super::dispatcher_types::*;
 
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug)]
+#[derive(Debug, Make)]
 pub struct KeySenderReply<T: PurrStep, U: PurrRule, C: PurrKey> {
-    pub sender: Option<Sender<DispatcherReply<T, U>>>,
-    pub key: C,
+    #[None] pub sender: Option<Sender<DispatcherReply<T, U>>>,
+    #[Some(C::default())] pub key: C,
 }
 
 impl<T: PurrStep, U: PurrRule, C: PurrKey> Default for KeySenderReply<T, U, C> {
     fn default() -> Self {
-        Self {
-            sender: None,
-            key: C::default(),
-        }
+        Self::new()
     }
 }
 
@@ -50,11 +49,11 @@ where
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug)]
+#[derive(Debug, Make)]
 pub struct PurrStation<T: PurrStep, U: PurrRule, C: PurrKey> {
     pub main_channel: Sender<DispatcherCommand<C>>,
     pub my_channel: Receiver<DispatcherReply<T, U>>,
-    pub archive: AlignedVec,
+    #[Some(AlignedVec::new())] pub archive: AlignedVec,
     pub key: C
 }
 
@@ -64,14 +63,10 @@ where
     U: PurrRule + Archive + for<'a> Serialize<Strategy<Serializer<AlignedVec, ArenaHandle<'a>, Share>, RkyvError>>,
     C: PurrKey
 {
-    pub fn new(main_channel: Sender<DispatcherCommand<C>>, my_channel: Receiver<DispatcherReply<T, U>>, key: C) -> Self {
-        Self { main_channel, my_channel, archive: AlignedVec::new(), key }
-    }
-
     pub fn siding_to_byte(&mut self, purr_siding: &mut PurrSiding<T, U>) -> Result<bytes::Bytes, PurrError> {
         self.archive.clear();
         let archive = std::mem::take(&mut self.archive);
-        rkyv::api::high::to_bytes_in(&purr_siding.main_train, archive).map_err(|e| PurrError::Internal(e.to_string()))?;
+        self.archive = rkyv::api::high::to_bytes_in(&purr_siding.main_train, archive).map_err(|e| PurrError::Internal(e.to_string()))?;
         let bytes = bytes::Bytes::copy_from_slice(&self.archive);
         purr_siding.main_train.clear();
         Ok(bytes)
@@ -88,7 +83,7 @@ where
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug)]
+#[derive(Debug, New)]
 pub struct PurrLink<T: PurrStep, U: PurrRule, C: PurrKey> {
     pub channel: Sender<DispatcherCommand<C>>,
     pub line_channel: Receiver<DispatcherReply<T, U>>
@@ -100,10 +95,6 @@ where
     U: PurrRule,
     C: PurrKey
 {
-    pub fn new(channel: Sender<DispatcherCommand<C>>, line_channel: Receiver<DispatcherReply<T, U>>) -> Self {
-        Self { channel, line_channel }
-    }
-
     pub async fn new_route(&mut self, key: C, action: RouteAction, channel_cap: usize) -> Result<Option<DispatcherReply<T, U>>, PurrError> {
         self.channel.send(DispatcherCommand::AddRoute { key, action, channel_cap }).await.map_err(|e| PurrError::Internal(e.to_string()))?;
         Ok(self.line_channel.recv().await)

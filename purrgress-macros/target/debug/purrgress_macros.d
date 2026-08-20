@@ -1,0 +1,1 @@
+C:\Users\Honami\Desktop\purrgress\purrgress-macros\target\debug\purrgress_macros.dll: C:\Users\Honami\Desktop\purrgress\purrgress-macros\target\package\purrgress-macros-0.5.2\src\cat_stage_manager\step.rs C:\Users\Honami\Desktop\purrgress\purrgress-macros\target\package\purrgress-macros-0.5.2\src\lib.rs

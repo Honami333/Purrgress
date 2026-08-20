@@ -1,5 +1,16 @@
 extern crate self as purrgress;
 
+#[cfg(feature = "macros")]
+pub use purrgress_macros::PurrStep;
+#[cfg(feature = "train")]
+pub use purrgress_macros::PurrRule;
+#[cfg(feature = "dispatcher")]
+pub use purrgress_macros::PurrKey;
+#[cfg(feature = "scrap")]
+pub use purrgress_macros::{purr_pounce, purr_tentacle, purr_rumble, new_purr_chain, meowphosis};
+#[cfg(feature = "animator")]
+pub use purrgress_macros::{purr_pandemonium, abyssal_grimoire, purr_rumble_brimstone, abyssal_march};
+
 
 #[cfg(feature = "dispatcher")]
 pub mod cat_telegraph {

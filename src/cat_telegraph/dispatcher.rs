@@ -19,8 +19,6 @@ use crate::cat_malloc::train_types::*;
 use super::dispatcher_types::*;
 use super::station_link::*;
 
-pub use purrgress_macros::PurrKey;
-
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[derive(Debug)]

@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+use wibr::Make;
+
 use crate::types::PurrStep;
 use crate::types::InsertPosition;
 
@@ -10,11 +12,11 @@ use super::train_types::*;
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
-#[derive(Debug)]
+#[derive(Debug, Make)]
 pub struct PurrTrain<T: PurrStep, U: PurrRule, S: PurrTrack<RouteBox<T, U>> = cursorvec::CursorVec<RouteBox<T, U>>> {
-    pub line: S,
-    _mark_t: PhantomData<T>,
-    _mark_u: PhantomData<U>
+    #[Some(S::tr_new())] pub line: S,
+    #[Some(Default::default())] _mark_t: PhantomData<T>,
+    #[Some(Default::default())]_mark_u: PhantomData<U>
 }
 
 impl<T, U, S> Default for PurrTrain<T, U, S> 
@@ -23,9 +25,7 @@ where
     U: PurrRule,
     S: PurrTrack<RouteBox<T, U>>
 {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl<T, U, S> PurrTrain<T, U, S> 
@@ -34,14 +34,6 @@ where
     U: PurrRule,
     S: PurrTrack<RouteBox<T, U>>
 {
-    pub fn new() -> Self {
-        Self {
-            line: S::tr_new(),
-            _mark_t: Default::default(),
-            _mark_u: Default::default()
-        }
-    }
-
     pub fn attach(&mut self, purr_siding: &mut PurrSiding<T, U>) {
         self.line.tr_extend(purr_siding.main_train.drain(..));
     }

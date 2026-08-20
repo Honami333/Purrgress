@@ -6,7 +6,7 @@ use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
 use purrgress::cat_telegraph::station_link;
 use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
-use purrgress_macros::PurrStep;
+use purrgress::PurrStep;
 
 use rkyv::{Archive, Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
@@ -89,22 +89,22 @@ async fn main() {
     let mut run_disign = train_design::PurrDesign::new();
     run_disign.single(MyStage::Connect, TrackRule::run(3.0, 1.0, MyKey::Running));
     run_disign.single(MyStage::Waiting, TrackRule::run(3.0, 1.0, MyKey::Running));
-    let run_box = train_design::DesignBox::new(
+    run_disign.new_chain(
+        MyStage::Disconnect,
         TrackRule::run(3.0, 2.0, MyKey::Running),
-        Some(vec![MyStage::Connect, MyStage::Waiting, MyStage::Waiting])
+        vec![MyStage::Connect, MyStage::Waiting, MyStage::Waiting]
     );
-    run_disign.chain(MyStage::Disconnect, run_box);
 
     // Для ждущего клиента
     // For waiting client
     let mut wait_disign = train_design::PurrDesign::new();
     wait_disign.single(MyStage::Connect, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
     wait_disign.single(MyStage::Waiting, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
-    let wait_box = train_design::DesignBox::new(
+    wait_disign.new_chain(
+        MyStage::Disconnect,
         TrackRule::wait(2.0, 10.0, MyKey::Waiting),
-        Some(vec![MyStage::Connect, MyStage::Waiting])
+        vec![MyStage::Connect, MyStage::Waiting]
     );
-    wait_disign.chain(MyStage::Disconnect, wait_box);
 
     // Обычное запикание шаблонов
     // Standard baking of templates

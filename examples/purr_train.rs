@@ -6,8 +6,7 @@ use purrgress::cat_malloc::train_types;
 
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
 use purrgress::condition;
-
-use purrgress_macros::PurrStep;
+use purrgress::PurrStep;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 pub enum MyStage {
@@ -27,13 +26,8 @@ fn main() {
     let mut purr_siding = train_siding::PurrSiding::new(8);
 
     design_single(&mut purr_design);
-
-    let purr_iwr_chain = train_design::DesignBox::new(
-        train_types::StandardRules::instant(),
-        Some( vec![MyStage::Idle, MyStage::Walk, MyStage::Run] )
-    );
     
-    purr_design.chain(MyStage::IWRChain, purr_iwr_chain);
+    purr_design.new_chain(MyStage::IWRChain, train_types::StandardRules::instant(), vec![MyStage::Idle, MyStage::Walk, MyStage::Run]);
 
     purr_route.construct_schedule(&purr_design, BufferMode::Keep).unwrap();
 

@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
+use wibr::New;
+
 use super::train_design::*;
 use super::train_types::*;
 
@@ -89,21 +91,8 @@ where
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, New)]
 pub struct RouteBox<T: PurrStep, U: PurrRule> {
     pub rule: U,
     pub carriage: T
-}
-
-impl<T, U> RouteBox<T, U> 
-where 
-    T: PurrStep,
-    U: PurrRule
-{
-    pub fn new(rule: U, carriage: T) -> Self {
-        Self {
-            rule,
-            carriage
-        }
-    }
 }

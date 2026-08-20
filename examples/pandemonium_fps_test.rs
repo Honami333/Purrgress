@@ -1,4 +1,4 @@
-use purrgress_macros::{meowphosis, PurrStep};
+use purrgress::{meowphosis, PurrStep};
 use purrgress::cat_motion_blur::pandemonium_types::PurrFrameStage;
 use purrgress::types;
 use std::collections::HashMap;

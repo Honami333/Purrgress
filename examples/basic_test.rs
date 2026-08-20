@@ -1,8 +1,7 @@
 use purrgress::cat_stage_manager::*;
 use purrgress::condition;
 use purrgress::types;
-
-use purrgress_macros::{meowphosis, PurrStep};
+use purrgress::{meowphosis, PurrStep};
 
 use std::time;
 

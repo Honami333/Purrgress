@@ -48,7 +48,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.5.1", features = ["train"] }
+purrgress = { version = "0.5.11", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи
@@ -94,8 +94,7 @@ use purrgress::cat_malloc::train_types;
 
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
 use purrgress::condition;
-
-use purrgress_macros::PurrStep;
+use purrgress::PurrStep;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 pub enum MyStage {
@@ -115,13 +114,8 @@ fn main() {
     let mut purr_siding = train_siding::PurrSiding::new(8);
 
     design_single(&mut purr_design);
-
-    let purr_iwr_chain = train_design::DesignBox::new(
-        train_types::StandardRules::instant(),
-        Some( vec![MyStage::Idle, MyStage::Walk, MyStage::Run] )
-    );
     
-    purr_design.chain(MyStage::IWRChain, purr_iwr_chain);
+    purr_design.new_chain(MyStage::IWRChain, train_types::StandardRules::instant(), vec![MyStage::Idle, MyStage::Walk, MyStage::Run]);
 
     purr_route.construct_schedule(&purr_design, BufferMode::Keep).unwrap();
 
@@ -188,7 +182,7 @@ use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
 use purrgress::cat_telegraph::station_link;
 use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
-use purrgress_macros::PurrStep;
+use purrgress::PurrStep;
 
 use rkyv::{Archive, Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
@@ -271,22 +265,22 @@ async fn main() {
     let mut run_disign = train_design::PurrDesign::new();
     run_disign.single(MyStage::Connect, TrackRule::run(3.0, 1.0, MyKey::Running));
     run_disign.single(MyStage::Waiting, TrackRule::run(3.0, 1.0, MyKey::Running));
-    let run_box = train_design::DesignBox::new(
+    run_disign.new_chain(
+        MyStage::Disconnect,
         TrackRule::run(3.0, 2.0, MyKey::Running),
-        Some(vec![MyStage::Connect, MyStage::Waiting, MyStage::Waiting])
+        vec![MyStage::Connect, MyStage::Waiting, MyStage::Waiting]
     );
-    run_disign.chain(MyStage::Disconnect, run_box);
 
     // Для ждущего клиента
     // For waiting client
     let mut wait_disign = train_design::PurrDesign::new();
     wait_disign.single(MyStage::Connect, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
     wait_disign.single(MyStage::Waiting, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
-    let wait_box = train_design::DesignBox::new(
+    wait_disign.new_chain(
+        MyStage::Disconnect,
         TrackRule::wait(2.0, 10.0, MyKey::Waiting),
-        Some(vec![MyStage::Connect, MyStage::Waiting])
+        vec![MyStage::Connect, MyStage::Waiting]
     );
-    wait_disign.chain(MyStage::Disconnect, wait_box);
 
     // Обычное запикание шаблонов
     // Standard baking of templates

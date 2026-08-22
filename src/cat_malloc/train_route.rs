@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
 
-use wibr::New;
+use wibr::{New, MakeFull};
 
 use super::train_design::*;
 use super::train_types::*;
@@ -14,11 +14,12 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, MakeFull)]
+#[Extern(size: usize)]
 pub struct PurrRoute<T: PurrStep, U: PurrRule> {
-    pub schedule: HashMap<T, Vec<RouteBox<T, U>>>,
-    pub bake_buffer: Vec<RouteBox<T, U>>,
-    pub visited_buffer: Vec<T>,
+    #[Some(HashMap::new())] pub schedule: HashMap<T, Vec<RouteBox<T, U>>>,
+    #[Functional({ Vec::with_capacity(size) })] pub bake_buffer: Vec<RouteBox<T, U>>,
+    #[Functional({ Vec::with_capacity(size) })] pub visited_buffer: Vec<T>,
 }
 
 impl<T, U> Default for PurrRoute<T, U> 
@@ -36,14 +37,6 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn new(size: usize) -> Self {
-        Self {
-            schedule: HashMap::new(),
-            bake_buffer: Vec::with_capacity(size),
-            visited_buffer: Vec::with_capacity(size)
-        }
-    }
-
     pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>, buffer_mode: BufferMode) -> Result<()> {
         if matches!(buffer_mode, BufferMode::Clear) { self.schedule.clear(); };
 

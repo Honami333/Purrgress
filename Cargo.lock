@@ -537,7 +537,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.5.22"
+version = "0.5.3"
 dependencies = [
  "anyhow",
  "bevy_ecs",
@@ -909,19 +909,20 @@ dependencies = [
 
 [[package]]
 name = "wibr"
-version = "0.1.1"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18b73049761a3d51a86da832992c5ce511ad41c01c582921f4d9e49fda022cf4"
+checksum = "47f787838776e10e04a4985e69511e838894582e3c5dd6c494098b070634170a"
 dependencies = [
  "wibr-forge",
 ]
 
 [[package]]
 name = "wibr-forge"
-version = "0.1.1"
+version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea3f265dd1ae0507e5e89c95be6dbdebb0b38ff15ff6bfcf87916e1574d971ce"
+checksum = "e9cce1b24741dd4a1ca79287b0d18cd7883a71871e76dab632d064c29701ebce"
 dependencies = [
+ "proc-macro2",
  "quote",
  "syn 2.0.117",
 ]

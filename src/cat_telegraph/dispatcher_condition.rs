@@ -2,6 +2,8 @@ use purrgress::cat_telegraph::dispatcher_types::PurrKey;
 use purrgress_macros::PurrRule;
 use purrgress::condition::{self, PurrCondition};
 
+use wibr::MakeFull;
+
 
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -18,30 +20,23 @@ impl<Y: PurrKey> TrackRule<Y> {
     pub fn instant() -> Self { Self::Instant(condition::InstantCondition) }
     pub fn timer(duration: f32) -> Self { Self::Timer(condition::PurrTimer::new(duration)) }
     pub fn flag() -> Self { Self::Flag(condition::PurrFlag::new()) }
-    pub fn run(main_timer: f32, waiting_timer: f32, key: Y) -> Self { Self::RunTimer( RunTimer::new(main_timer, waiting_timer, key) ) }
-    pub fn wait(main_timer: f32, max_time: f32, key: Y) -> Self { Self::WaitTimer( WaitTimer::new(main_timer, max_time, key)) }
+    pub fn run(main_timer: f32, waiting_timer: f32, key: Y) -> Self { Self::RunTimer( RunTimer::new(key, main_timer, waiting_timer, ) ) }
+    pub fn wait(main_timer: f32, max_time: f32, key: Y) -> Self { Self::WaitTimer( WaitTimer::new(max_time, key, main_timer)) }
 }
 
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, MakeFull)]
+#[Extern(main_timer: f32)]
+#[Extern( waiting_timer: f32)]
 pub struct RunTimer<Y: PurrKey> {
-    pub main_timer: condition::PurrTimer,
-    pub waiting_timer: condition::PurrTimer,
-    pub fast_flag: condition::PurrFlag,
+    #[Functional({ condition::PurrTimer::new(main_timer) })] pub main_timer: condition::PurrTimer,
+    #[Functional({ condition::PurrTimer::new(waiting_timer) })] pub waiting_timer: condition::PurrTimer,
+    #[Some(condition::PurrFlag::new())] pub fast_flag: condition::PurrFlag,
     pub key: Y
 }
 
 impl<Y: PurrKey> RunTimer<Y> {
-    pub fn new(main_timer: f32, waiting_timer: f32, key: Y) -> Self {
-        Self {
-            main_timer: condition::PurrTimer::new(main_timer),
-            waiting_timer: condition::PurrTimer::new(waiting_timer),
-            fast_flag: condition::PurrFlag::new(),
-            key
-        }
-    }
-
     pub fn tick(&mut self, delta: f32) {
         if !self.main_timer.is_finished() {
             self.main_timer.tick(delta);
@@ -68,10 +63,11 @@ impl<Y: PurrKey> PurrCondition for RunTimer<Y> {
 
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, MakeFull)]
+#[Extern(main_timer: f32)]
 pub struct WaitTimer<Y: PurrKey> {
-    pub main_timer: condition::PurrTimer,
-    pub finish_flag: condition::PurrFlag,
+    #[Functional({ condition::PurrTimer::new(main_timer) })] pub main_timer: condition::PurrTimer,
+    #[Some(condition::PurrFlag::new())] pub finish_flag: condition::PurrFlag,
     pub max_time: f32,
     pub key: Y
 }
@@ -80,10 +76,6 @@ impl<Y> WaitTimer<Y>
 where
     Y: PurrKey
 {
-    pub fn new(main_timer: f32, max_time: f32, key: Y) -> Self {
-        Self { main_timer: condition::PurrTimer::new(main_timer), finish_flag: condition::PurrFlag::new(), max_time, key }
-    }
-
     pub fn tick(&mut self, delta: f32) {
         self.main_timer.tick(delta);
     }

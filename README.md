@@ -48,7 +48,7 @@ Add the library to your / Добавьте библиотеку в ваш `Cargo
 
 ```toml
 [dependencies]
-purrgress = { version = "0.5.22", features = ["train"] }
+purrgress = { version = "0.5.3", features = ["train"] }
 ```
 
 ## Features / Поддерживаемые фичи
@@ -323,12 +323,10 @@ pub async fn run_client(
         let mut station = station_link::PurrStation::new(line, rx_reply, key);
 
         // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
-        // Важно читайте предупреждение!
         // Serialization via rkyv into Bytes was chosen for maximum speed
         // Important: read the warning!
         let bytes = station.siding_to_byte(&mut siding)?;
         // Отправляем команду о прикреплении вагона к основному поезду
-        // Send command to attach carriage to main train
         let _ = station.send_command(dispatcher_types::DispatcherCommand::Attach { siding_data: bytes, key: station.get_key() }).await?;
 
         loop {

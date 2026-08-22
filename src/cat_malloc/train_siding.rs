@@ -4,6 +4,8 @@ use std::collections::HashSet;
 
 use anyhow::{anyhow, Result};
 
+use wibr::MakeFull;
+
 use super::train_route::*;
 use super::train_types::*;
 
@@ -11,10 +13,11 @@ use super::train_types::*;
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, MakeFull)]
+#[Extern(size: usize)]
 pub struct PurrSiding<T: PurrStep, U: PurrRule> {
-    pub main_train: Vec<RouteBox<T, U>>,
-    pub switches: Vec<usize>
+    #[Functional({ Vec::with_capacity(size) })] pub main_train: Vec<RouteBox<T, U>>,
+    #[Functional({ Vec::with_capacity(size) })] pub switches: Vec<usize>
 }
 
 
@@ -33,13 +36,6 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn new(size: usize) -> Self {
-        Self {
-            main_train: Vec::with_capacity(size),
-            switches: Vec::with_capacity(size)
-        }
-    }
-
     pub fn launch(&mut self, parametr: T, buffer_mode: BufferMode, purr_route: &PurrRoute<T, U>) -> Result<()> {
         let op_train = purr_route.schedule.get(&parametr);
 

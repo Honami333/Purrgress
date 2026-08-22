@@ -9,6 +9,7 @@ use rkyv::bytecheck::CheckBytes;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::mpsc::Receiver;
+use wibr::MakeFull;
 
 use crate::cat_malloc::train_route::RouteBox;
 use crate::types::PurrStep;
@@ -21,38 +22,21 @@ use super::station_link::*;
 
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[derive(Debug)]
+#[derive(Debug, MakeFull)]
+#[Extern(channel_cap: usize)]
+#[Code({
+    let (tx, rx) = mpsc::channel(channel_cap);
+    let (line_tx, line_rx) = mpsc::channel(channel_cap);
+})]
+#[Ret((Self, PurrLink<T, U, C>))]
+#[RetWith((Self, PurrLink::new(tx, line_rx)))]
 pub struct PurrDispatcher<T: PurrStep, U: PurrRule, C: PurrKey, S: PurrTrack<RouteBox<T, U>> = cursorvec::CursorVec<RouteBox<T, U>>> {
-    pub purr_train: PurrTrain<T, U, S>,
-    pub channel: Receiver<DispatcherCommand<C>>,
-    pub line_channel: Sender<DispatcherReply<T, U>>,
-    pub line_count: usize,
-    pub fast_routes: [KeySenderReply<T, U, C>; FAST_ROUTES_CAPACITY],
-    pub dynamic_routes: HashMap<C, Sender<DispatcherReply<T, U>>>
-}
-
-impl<T, U, C, S> PurrDispatcher<T, U, C, S> 
-where 
-    T: PurrStep,
-    U: PurrRule,
-    C: PurrKey,
-    S: PurrTrack<RouteBox<T, U>>
-{
-    pub fn new(channel_cap: usize) -> (Self, PurrLink<T, U, C>) {
-        let (tx, rx) = mpsc::channel(channel_cap);
-        let (line_tx, line_rx) = mpsc::channel(channel_cap);
-        (
-            Self {
-                purr_train: PurrTrain::new(),
-                channel: rx,
-                line_channel: line_tx,
-                line_count: 0,
-                fast_routes: Default::default(),
-                dynamic_routes: HashMap::new()
-            }, 
-            PurrLink::new(tx, line_rx)
-        )
-    }
+    #[Some(PurrTrain::new())] pub purr_train: PurrTrain<T, U, S>,
+    #[Some(rx)] pub channel: Receiver<DispatcherCommand<C>>,
+    #[Some(line_tx)] pub line_channel: Sender<DispatcherReply<T, U>>,
+    #[Some(0)] pub line_count: usize,
+    #[Some(Default::default())] pub fast_routes: [KeySenderReply<T, U, C>; FAST_ROUTES_CAPACITY],
+    #[Some(HashMap::new())] pub dynamic_routes: HashMap<C, Sender<DispatcherReply<T, U>>>
 }
 
 impl<T, U, C, S> PurrDispatcher<T, U, C, S> 

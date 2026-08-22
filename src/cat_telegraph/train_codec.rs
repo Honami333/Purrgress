@@ -6,6 +6,8 @@ use rkyv::bytecheck::CheckBytes;
 
 use bytes::Bytes;
 
+use wibr::try_iterator::TryIterator;
+
 use crate::types::PurrStep;
 use crate::types::InsertPosition;
 
@@ -31,9 +33,9 @@ where
     pub fn deserialize<'a>(bytes: &'a Bytes) -> Result<impl Iterator<Item = RouteBox<T, U>>, PurrError> where T: 'a, U: 'a {
         let archived  = rkyv::access::<rkyv::Archived<Vec<RouteBox<T, U>>>, RkyvError>(bytes)
             .map_err(|e| PurrError::Internal(e.to_string()))?;
-        let de_archived = archived.iter().map(|archived_state| {
-            rkyv::deserialize::<RouteBox<T, U>, RkyvError>(archived_state).unwrap()
-        });
+        let de_archived = archived.iter().try_map(|archived_state| {
+            rkyv::deserialize::<RouteBox<T, U>, RkyvError>(archived_state)
+        }).take_okk().map_err(|e| PurrError::Internal(e.to_string()))?;
         Ok(de_archived)
     }
     

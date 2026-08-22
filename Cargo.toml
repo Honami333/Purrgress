@@ -1,6 +1,6 @@
 [package]
 name = "purrgress"
-version = "0.5.22"
+version = "0.5.3"
 edition = "2024"
 
 documentation = "https://docs.rs"
@@ -30,7 +30,7 @@ tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "sync", "
 rkyv = { version = "0.8.18", features = ["bytes-1"], optional = true }
 bytes = { version = "1.12.1", optional = true }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
-wibr = "0.1.1"
+wibr = { version = "0.2.11", features = ["make_full"] }
 
 [features]
 default = []

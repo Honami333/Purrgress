@@ -46,9 +46,7 @@ impl<Y: PurrKey> RunTimer<Y> {
     }
 
     pub fn is_key(&self, key: Y) -> bool { self.key == key }
-
     pub fn is_key_fast(&mut self, key: Y) { if self.is_key(key) { self.fast_flag.set_flag(true);}; }
-
     pub fn overflow(&self) -> bool { self.waiting_timer.is_finished() }
 }
 
@@ -76,9 +74,7 @@ impl<Y> WaitTimer<Y>
 where
     Y: PurrKey
 {
-    pub fn tick(&mut self, delta: f32) {
-        self.main_timer.tick(delta);
-    }
+    pub fn tick(&mut self, delta: f32) { self.main_timer.tick(delta) }
 
     pub fn set_flag(&mut self, key: Y, flag: bool) {
         if self.main_timer.is_finished() && self.key == key { self.finish_flag.set_flag(flag); };
@@ -89,7 +85,6 @@ where
     }
 
     pub fn is_key(&self, key: Y) -> bool { self.key == key }
-
     pub fn overflow(&self) -> bool { self.main_timer.get_time_left() >= self.max_time }
 }
 

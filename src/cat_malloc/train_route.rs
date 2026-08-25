@@ -2,12 +2,11 @@ use crate::types::PurrStep;
 
 use std::collections::HashMap;
 
-use anyhow::{anyhow, Result};
-
 use wibr::{New, MakeFull};
 
 use super::train_design::*;
 use super::train_types::*;
+use super::train_error::*;
 
 
 
@@ -37,43 +36,43 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>, buffer_mode: BufferMode) -> Result<()> {
+    pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>, buffer_mode: BufferMode) -> TrainResult<(), T> {
         if matches!(buffer_mode, BufferMode::Clear) { self.schedule.clear(); };
 
-        for parametr in purr_design.blueprints.keys() {
+        for &parametr in purr_design.blueprints.keys() {
             self.bake_buffer.clear();
             self.visited_buffer.clear();
 
             Self::bake_stage(parametr, purr_design, &mut self.bake_buffer, &mut self.visited_buffer)?;
 
-            self.schedule.insert(*parametr, self.bake_buffer.clone());
+            self.schedule.insert(parametr, self.bake_buffer.clone());
         };
 
         Ok(())
     }
 
     pub fn bake_stage(
-        parametr: &T,
+        parametr: T,
         purr_design: &PurrDesign<T, U>,
         bake_buffer: &mut Vec<RouteBox<T, U>>,
         visited_buffer: &mut Vec<T>
-    ) -> Result<()> {
-        if visited_buffer.contains(parametr) {
-            return Err( anyhow!("Recursive stage error carriage: {:?}", *parametr) );
+    ) -> TrainResult<(), T> {
+        if visited_buffer.contains(&parametr) {
+            return Err( TrainError::RecursiveStage { carriage: parametr } );
         };
 
-        if let Some(design_box) = purr_design.blueprints.get(parametr) {
-            visited_buffer.push(*parametr);
+        if let Some(design_box) = purr_design.blueprints.get(&parametr) {
+            visited_buffer.push(parametr);
 
             if let Some(route_parametr_vec) = &design_box.coupling {
-                for route_parametr in route_parametr_vec {
+                for &route_parametr in route_parametr_vec {
                     Self::bake_stage(route_parametr, purr_design, bake_buffer, visited_buffer)?;
                 };
             };
 
             visited_buffer.pop();
 
-            let route_box = RouteBox::new(design_box.rule, *parametr);
+            let route_box = RouteBox::new(design_box.rule, parametr);
             bake_buffer.push(route_box);
         };
 

@@ -4,6 +4,7 @@ use purrgress::cat_malloc::train_route;
 use purrgress::cat_malloc::train_siding;
 use purrgress::cat_malloc::train_types;
 
+use purrgress::cat_malloc::train_types::StandardRules;
 use purrgress::cat_malloc::train_types::{PurrRule, BufferMode};
 use purrgress::condition;
 use purrgress::PurrStep;
@@ -18,27 +19,16 @@ pub enum MyStage {
 
 fn main() {
     let mut purr_train = purr_train::PurrTrain::new();
-
     let mut purr_design = train_design::PurrDesign::new();
-
     let mut purr_route = train_route::PurrRoute::new(8);
-
     let mut purr_siding = train_siding::PurrSiding::new(8);
 
     design_single(&mut purr_design);
-    
-    purr_design.new_chain(MyStage::IWRChain, train_types::StandardRules::instant(), vec![MyStage::Idle, MyStage::Walk, MyStage::Run]);
-
+    purr_design.chain(MyStage::IWRChain, train_types::StandardRules::instant(), vec![MyStage::Idle, MyStage::Walk, MyStage::Run]);
     purr_route.construct_schedule(&purr_design, BufferMode::Keep).unwrap();
 
     purr_siding.launch(MyStage::IWRChain, BufferMode::Clear, &purr_route).unwrap();
-
-    purr_siding.find_index(MyStage::Run, BufferMode::Clear);
-
-    let index_vec = purr_siding.get_switches();
-
-    purr_siding.change_rule(index_vec[0], train_types::StandardRules::timer(2.0)).unwrap();
-
+    purr_siding.change_rule(MyStage::Run, train_types::StandardRules::timer(2.0));
 
     println!("{purr_train:?}");
 
@@ -47,9 +37,7 @@ fn main() {
 
         let purr_event = purr_train.advance_train();
 
-        if let train_types::PurrTrainEvent::Transition { .. } = purr_event {
-            println!("{purr_event:?}");
-        };
+        if let train_types::PurrTrainEvent::Transition { .. } = purr_event { println!("{purr_event:?}"); };
 
         if purr_event == train_types::PurrTrainEvent::Idle {
             purr_siding.launch(MyStage::IWRChain, BufferMode::Clear, &purr_route).unwrap();
@@ -64,20 +52,16 @@ fn rule_update(purr_train: &mut purr_train::PurrTrain<MyStage, train_types::Stan
     let delta = 0.00000006;
 
     if let Some(route_box) = purr_train.get_current_mut() {
-        if let Some(timer) = route_box.rule.as_mut_rule::<condition::PurrTimer>() {
-            timer.tick(delta);
-        };
-
-        if let Some(flag) = route_box.rule.as_mut_rule::<condition::PurrFlag>() {
-            flag.set_flag(true);
+        match &mut route_box.rule {
+            StandardRules::Timer(timer) => timer.tick(delta),
+            StandardRules::Flag(flag) => flag.set_flag(true),
+            _ => {}
         };
     };
 }
 
 fn design_single(purr_design: &mut train_design::PurrDesign<MyStage, train_types::StandardRules>) {
     purr_design.single(MyStage::Idle, train_types::StandardRules::timer(2.0));
-
     purr_design.single(MyStage::Walk, train_types::StandardRules::timer(1.0));
-
     purr_design.single(MyStage::Run, train_types::StandardRules::timer(1.0));
 }

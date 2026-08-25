@@ -36,13 +36,13 @@ where
         self.blueprints.insert(parametr, design);
     }
 
-    pub fn new_chain(&mut self, parametr: T, rule: U, coupling: Vec<T>) {
+    pub fn chain(&mut self, parametr: T, rule: U, coupling: Vec<T>) {
         let mut design = DesignBox::new(rule);
         design.set_coupling(coupling);
         self.blueprints.insert(parametr, design);
     }
 
-    pub fn chain(&mut self, parametr: T, design: DesignBox<T, U>) {
+    pub fn design_chain(&mut self, parametr: T, design: DesignBox<T, U>) {
         self.blueprints.insert(parametr, design);
     }
 }

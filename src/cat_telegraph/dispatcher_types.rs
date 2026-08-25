@@ -5,7 +5,7 @@ use std::error::Error;
 
 use tokio::sync::mpsc::Receiver;
 
-use bytes::Bytes;
+use wibr::MakeFull;
 
 use crate::types::PurrStep;
 use crate::types::InsertPosition;
@@ -16,19 +16,19 @@ use crate::cat_malloc::train_types::*;
 pub const FAST_ROUTES_CAPACITY: usize = 16;
 
 
-pub trait PurrKey: Debug + Default + PartialEq + Eq + Hash + Clone + Copy {}
+pub trait PurrKey: Debug + Default + PartialEq + Eq + Hash + Copy {}
 
-impl<T: Debug + Default + PartialEq + Eq + Hash + Clone + Copy> PurrKey for T {}
+impl<T: Debug + Default + PartialEq + Eq + Hash + Copy> PurrKey for T {}
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
-#[derive(Debug, Clone)]
-pub enum DispatcherCommand<C> {
+#[derive(Debug, Clone, Copy)]
+pub enum DispatcherCommand<T: PurrStep, C: PurrKey> {
     AddRoute { key: C, action: RouteAction, channel_cap: usize },
     DeleteRoute { key: C, action: RouteAction },
-    Attach { siding_data: Bytes, key: C },
-    Replace { siding_data: Bytes, key: C },
-    RerouteAt { siding_data: Bytes, position: InsertPosition, key: C },
+    Attach { carriage: T, key: C },
+    Replace { carriage: T, key: C },
+    RerouteAt { carriage: T, position: InsertPosition, key: C },
     ShrinkLine { line_length: usize, key: C },
     AdvanceTrain { key: C },
     GetCurrent { key: C },
@@ -50,33 +50,50 @@ pub enum DispatcherReply<T: PurrStep, U: PurrRule> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum PurrError {
-    DuplicateInFastRoutes(String),
-    DuplicateInDynamicRoutes(String),
+pub enum DispatcherError {
+    DuplicateInFastRoutes,
+    DuplicateInDynamicRoutes,
     CursorNotFound,
+    LineChannelClosed,
+    RouteChannelClosed,
     Internal(String),
 }
 
-impl fmt::Display for PurrError {
+impl fmt::Display for DispatcherError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PurrError::DuplicateInFastRoutes(msg) => write!(f, "Fast Routes Error: {}", msg),
-            PurrError::DuplicateInDynamicRoutes(msg) => write!(f, "Dynamic Routes Error: {}", msg),
-            PurrError::CursorNotFound => write!(f, "Cursor Error"),
-            PurrError::Internal(msg) => write!(f, "Internal Error: {}", msg),
+            DispatcherError::DuplicateInFastRoutes => write!(f, "Route addition failed: The key already exists in the fast routes array."),
+            DispatcherError::DuplicateInDynamicRoutes => write!(f, "Route addition failed: The key already exists in the dynamic routes map (cross-check)."),
+            DispatcherError::CursorNotFound => write!(f, "Cursor Error"),
+            DispatcherError::LineChannelClosed => write!(f, "Line channel is closed, receiver dropped"),
+            DispatcherError::RouteChannelClosed => write!(f, "Route reply channel is closed, receiver dropped"),
+            DispatcherError::Internal(msg) => write!(f, "Internal Error: {}", msg),
+            
+            
         }
     }
 }
 
-impl Error for PurrError {}
+impl Error for DispatcherError {}
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RouteAction {
     Default,
     AddConfigure { check_duplicates: bool, check_duplicates_migrate: bool, migrate_to_dynamic: bool },
     DeleteConfigure { delete_everywhere: bool, migrate_to_fast: bool },
     GetConfigure { find_all: bool }
+}
+
+
+#[derive(Debug, Clone, Copy, MakeFull)]
+pub struct DispatchData<T: PurrStep, C: PurrKey> {
+    #[None] pub command: Option<DispatcherCommand<T, C>>,
+    #[None] pub key: Option<C>,
+    #[None] pub carriage: Option<T>,
+    #[None] pub insert_position: Option<InsertPosition>,
+    #[None] pub line_length: Option<usize>,
+    #[None] pub action: Option<RouteAction>
 }

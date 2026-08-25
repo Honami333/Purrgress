@@ -14,7 +14,7 @@ use std::fmt::Debug;
 /// enum MyStage { Idle, Walk }
 /// 
 /// impl manager_types::PurrStep for MyStage {}
-pub trait PurrStep: Debug + Copy + Clone + PartialEq + Eq + Hash {}
+pub trait PurrStep: Debug + Copy + PartialEq + Eq + Hash {}
 
 /// # Example of DuplicatePolicy usage
 ///

@@ -38,7 +38,7 @@ where
     S: PurrTrack<RouteBox<T, U>>
 {
     pub fn attach(&mut self, purr_siding: &mut PurrSiding<T, U>) {
-        self.line.tr_extend(purr_siding.main_train.drain(..));
+        self.line.tr_extend(purr_siding.main_line.drain(..));
     }
 
     pub fn replace(&mut self, purr_siding: &mut PurrSiding<T, U>) {
@@ -54,7 +54,7 @@ where
         };
         index = index.min(self.line.tr_len());
 
-        self.line.tr_splice(index..index, purr_siding.main_train.drain(..));
+        self.line.tr_splice(index..index, purr_siding.main_line.drain(..));
     }
 
     pub fn shrink_line(&mut self, line_length: usize) {

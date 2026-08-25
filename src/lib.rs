@@ -18,13 +18,13 @@ pub mod cat_telegraph {
     pub mod dispatcher_types;
     pub mod dispatcher;
     pub mod station_link;
-    mod train_codec;
 }
 
 #[cfg(feature = "train")]
 pub mod cat_malloc {
     pub mod purr_train;
     pub mod train_design;
+    pub mod train_error;
     pub mod train_route;
     pub mod train_siding;
     pub mod train_types;

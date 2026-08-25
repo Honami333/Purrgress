@@ -21,7 +21,7 @@ use crate::types::PurrVec;
 ///     fn as_any(&self) -> &dyn std::any::Any { self }
 ///     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
 /// }
-pub trait PurrCondition: Debug + Clone + Copy {
+pub trait PurrCondition: Debug + Copy {
     fn is_finished(&self) -> bool;
     fn reset(&mut self);
 }

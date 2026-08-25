@@ -1,13 +1,10 @@
 use crate::types::PurrStep;
 
-use std::collections::HashSet;
-
-use anyhow::{anyhow, Result};
-
 use wibr::MakeFull;
 
 use super::train_route::*;
 use super::train_types::*;
+use super::train_error::*;
 
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
@@ -16,8 +13,7 @@ use super::train_types::*;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, MakeFull)]
 #[Extern(size: usize)]
 pub struct PurrSiding<T: PurrStep, U: PurrRule> {
-    #[Functional({ Vec::with_capacity(size) })] pub main_train: Vec<RouteBox<T, U>>,
-    #[Functional({ Vec::with_capacity(size) })] pub switches: Vec<usize>
+    #[Functional({ Vec::with_capacity(size) })] pub main_line: Vec<RouteBox<T, U>>,
 }
 
 
@@ -36,76 +32,34 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn launch(&mut self, parametr: T, buffer_mode: BufferMode, purr_route: &PurrRoute<T, U>) -> Result<()> {
-        let op_train = purr_route.schedule.get(&parametr);
-
-        if let Some(train) = op_train {
+    pub fn launch(&mut self, carriage: T, buffer_mode: BufferMode, purr_route: &PurrRoute<T, U>) -> TrainResult<(), T> {
+        if let Some(branch ) = purr_route.schedule.get(&carriage) {
             if matches!(buffer_mode, BufferMode::Clear) { self.clear_main_train(); };
-
-            self.main_train.extend(train.clone());
+            self.main_line.extend_from_slice(branch);
             return Ok(());
         };
-
-        Err( anyhow!("Couldn't find {:?}", parametr) )
+        Err( TrainError::UnscheduledParam { carriage } )
     }
 
-    pub fn find_index(&mut self, parametr: T, buffer_mode: BufferMode) {
-        if matches!(buffer_mode, BufferMode::Clear) { self.clear_switches(); };
-
-        for (i, route_box) in self.main_train.iter().enumerate() {
-            if parametr == route_box.carriage {
-                self.switches.push(i);
-            };
+    pub fn change_rule(&mut self, carriage: T, rule: U) {
+        for route_box in self.main_line.iter_mut() {
+            if carriage == route_box.carriage { route_box.rule = rule; };
         };
     }
 
-    pub fn find_index_few(&mut self, parametrs: &[T], buffer_mode: BufferMode) {
-        if matches!(buffer_mode, BufferMode::Clear) { self.clear_switches(); };
-
-        for (i, route_box) in self.main_train.iter().enumerate() {
-            if parametrs.contains(&route_box.carriage) {
-                self.switches.push(i);
+    pub fn change_rule_few(&mut self, route_boxs: &[RouteBox<T, U>]) {
+        for main_route_box in self.main_line.iter_mut() {
+            for &route_box in route_boxs.iter() {
+                if main_route_box.carriage == route_box.carriage { main_route_box.rule = route_box.rule; };
             };
         };
-    }
-
-    pub fn find_index_many(&mut self, parametrs: &[T], buffer_mode: BufferMode) {
-        if matches!(buffer_mode, BufferMode::Clear) { self.clear_switches(); };
-
-        let target_set: HashSet<&T> = parametrs.iter().collect();
-
-        for (i, route_box) in self.main_train.iter().enumerate() {
-            if target_set.contains(&route_box.carriage) {
-                self.switches.push(i);
-            };
-        };
-    }
-
-    pub fn clear_switches(&mut self) {
-        self.switches.clear();
     }
 
     pub fn clear_main_train(&mut self) {
-        self.main_train.clear();
-    }
-
-    pub fn get_switches(&self) -> &[usize] {
-        &self.switches
+        self.main_line.clear();
     }
 
     pub fn train_len(&self) -> usize {
-        self.main_train.len()
-    }
-
-    pub fn change_rule(&mut self, index: usize, rule: U) -> Result<()> {
-        let op_route_box = self.main_train.get_mut(index);
-
-        if let Some(route_box) = op_route_box {
-            route_box.rule = rule;
-
-            return Ok(());
-        };
-
-        Err( anyhow!("Couldn't find parametr by {:?}", index) )
+        self.main_line.len()
     }
 }

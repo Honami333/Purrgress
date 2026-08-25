@@ -537,11 +537,10 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "bevy_ecs",
- "bytes",
  "cursorvec",
  "petgraph",
  "purrgress-macros",

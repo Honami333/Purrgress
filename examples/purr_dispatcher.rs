@@ -4,29 +4,33 @@ use purrgress::cat_malloc::train_siding;
 use purrgress::cat_malloc::train_types::{self, PurrRule};
 use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
+use purrgress::cat_telegraph::dispatcher_types::DispatcherCommand;
 use purrgress::cat_telegraph::station_link;
 use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
 use purrgress::PurrStep;
 
-use rkyv::{Archive, Deserialize, Serialize};
 use tokio::sync::mpsc::Sender;
+
+use wibr::get;
+use wibr::iff;
 
 
 // Все тот же абсолютно любой энум стадий
 // The exact same arbitrary stage enum
-#[derive(Archive, Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
 pub enum MyStage {
-    Connect,
-    Waiting,
-    Disconnect
+    RunConnect,
+    RunWaiting,
+    RunDisconnect,
+    WaitConnect,
+    WaitWaiting,
+    WaitDisconnect
 }
 
 // Мой юнум ключей, важно нужно иметь default. Трейт ключа реализуется автоматически
 // Советую делать дефолтом пустую стадию
 // My key enum, it is important to have default. Key trait is implemented automatically
 // I recommend setting an empty stage as default
-#[derive(Archive, Deserialize, Serialize)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum MyKey {
     #[default]
@@ -45,31 +49,77 @@ async fn main() {
     // Create a single train dispatcher and a link for external connections
     let (mut dispatcher, mut link) = dispatcher::PurrDispatcher::<MyStage, TrackRule<MyKey>, MyKey>::new(32);
     tokio::spawn(async move {
+        // Обычное конструирование чертежа
+        // Standard design construction
+        let mut disign = train_design::PurrDesign::new();
+        // Для бегущего клиента
+
+        // For running client
+        disign.single(MyStage::RunConnect, TrackRule::run(3.0, 1.0, MyKey::Running));
+        disign.single(MyStage::RunWaiting, TrackRule::run(3.0, 1.0, MyKey::Running));
+        disign.chain(
+        MyStage::RunDisconnect,
+        TrackRule::run(3.0, 2.0, MyKey::Running),
+        vec![MyStage::RunConnect, MyStage::RunWaiting, MyStage::RunWaiting]
+        );
+
+        // Для ждущего клиента
+        // For waiting client
+        disign.single(MyStage::WaitConnect, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
+        disign.single(MyStage::WaitWaiting, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
+        disign.chain(
+            MyStage::WaitDisconnect,
+            TrackRule::wait(2.0, 10.0, MyKey::Waiting),
+            vec![MyStage::WaitConnect, MyStage::WaitWaiting]
+        );
+
+         // Обычное запикание шаблонов
+        // Standard baking of templates
+        let mut route = train_route::PurrRoute::new(32);
+        route.construct_schedule(&disign, train_types::BufferMode::Keep).unwrap();
+
+        let mut siging = train_siding::PurrSiding::new(32);
+
         // Асихронная задача токио с циклом опрашивания диспечера
         // Tokio async task with a dispatcher polling loop
         loop {
             // Диспечер постоянно ловит команды возращая ключ станции от которой она пришла
             // Dispatcher continuously catches commands, returning the station key it came from
             match dispatcher.dispatch(dispatcher_types::RouteAction::Default).await {
-                Ok(Some(key)) => {
+                Ok(dispatcher_data) => {
+                    let key = get!{dispatcher_data.key ; continue };
                     // Лучше всего обрабатывать условия именно тут но опять же важно замерять delta
                     // It's best to handle conditions right here, but again, measuring delta is important
                     if let Some(route_box) = dispatcher.purr_train.get_current_mut() {
-                        // Условия которые изначально были кастомными но перешли внутрь либы (Почти взаимо заменяемы)
-                        // Первое бежит и дает время на просмотр после просмотра или по истечению второго таймера уничтожается
-                        // Conditions that were originally custom but moved inside the library (Almost interchangeable)
-                        // The first runs and grants time for viewing; after viewing or upon expiration of the second timer, it is destroyed
-                        if let Some(run) = route_box.rule.as_mut_rule::<RunTimer<MyKey>>() {
-                            run.tick(delta);
-                            run.is_key_fast(key);
+                        match &mut route_box.rule {
+                            // Условия которые изначально были кастомными но перешли внутрь либы (Почти взаимо заменяемы)
+                            // Первое бежит и дает время на просмотр после просмотра или по истечению второго таймера уничтожается
+                            // Conditions that were originally custom but moved inside the library (Almost interchangeable)
+                            // The first runs and grants time for viewing; after viewing or upon expiration of the second timer, it is destroyed
+                            TrackRule::RunTimer(run_timer) => {
+                                run_timer.tick(delta);
+                                run_timer.is_key_fast(key);
+                            },
+                            // Второе именно ждет пока на него не откликнется именно нужный ключ
+                            // На всякий случай был сделан таймер максимального ожидания, но если вам не нужно то просто поставте большое число
+                            // The second waits specifically until the correct key responds to it
+                            // A maximum wait timer was made just in case, but if you don't need it, just set a large number
+                            TrackRule::WaitTimer(wait_timer) => {
+                                wait_timer.tick(delta);
+                                wait_timer.set_flag(key, true);
+                            },
+                            _ => {}
                         };
-                        // Второе именно ждет пока на него не откликнется именно нужный ключ
-                        // На всякий случай был сделан таймер максимального ожидания, но если вам не нужно то просто поставте большое число
-                        // The second waits specifically until the correct key responds to it
-                        // A maximum wait timer was made just in case, but if you don't need it, just set a large number
-                        if let Some(wait) = route_box.rule.as_mut_rule::<WaitTimer<MyKey>>() {
-                            wait.tick(delta);
-                            wait.set_flag(key, true);
+                    };
+                    if let Some(carriage) = dispatcher_data.carriage {
+                        siging.launch(carriage, train_types::BufferMode::Clear, &route).unwrap();
+                    };
+                    if let Some(command) = dispatcher_data.command {
+                        match command {
+                            DispatcherCommand::Attach { .. } => dispatcher.purr_train.attach(&mut siging),
+                            DispatcherCommand::Replace { .. } => dispatcher.purr_train.replace(&mut siging),
+                            DispatcherCommand::RerouteAt { position, .. } => dispatcher.purr_train.reroute_at(&mut siging, position),
+                            _ => {}
                         };
                     };
                 },
@@ -77,52 +127,20 @@ async fn main() {
                     println!("{:?}", error);
                     break;
                 }
-                _ => {}
             };
         };
     });
-
-    // Обычное конструирование чертежа
-    // Для бегущего клиента
-    // Standard design construction
-    // For running client
-    let mut run_disign = train_design::PurrDesign::new();
-    run_disign.single(MyStage::Connect, TrackRule::run(3.0, 1.0, MyKey::Running));
-    run_disign.single(MyStage::Waiting, TrackRule::run(3.0, 1.0, MyKey::Running));
-    run_disign.new_chain(
-        MyStage::Disconnect,
-        TrackRule::run(3.0, 2.0, MyKey::Running),
-        vec![MyStage::Connect, MyStage::Waiting, MyStage::Waiting]
-    );
-
-    // Для ждущего клиента
-    // For waiting client
-    let mut wait_disign = train_design::PurrDesign::new();
-    wait_disign.single(MyStage::Connect, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
-    wait_disign.single(MyStage::Waiting, TrackRule::wait(1.0, 10.0, MyKey::Waiting));
-    wait_disign.new_chain(
-        MyStage::Disconnect,
-        TrackRule::wait(2.0, 10.0, MyKey::Waiting),
-        vec![MyStage::Connect, MyStage::Waiting]
-    );
-
-    // Обычное запикание шаблонов
-    // Standard baking of templates
-    let mut run_route = train_route::PurrRoute::new(32);
-    run_route.construct_schedule(&run_disign, train_types::BufferMode::Keep).unwrap();
-    let mut wait_route = train_route::PurrRoute::new(32);
-    wait_route.construct_schedule(&wait_disign, train_types::BufferMode::Keep).unwrap();
 
     // Через линк обращаемся к диспетчеру и просим зарегистровать ключи в ответ получая канал общения для команд
     // Via link, we contact dispatcher and request key registration, receiving a communication channel for commands in return
     let run_route_link = link.new_route(MyKey::Running, dispatcher_types::RouteAction::Default, 32).await.unwrap();
     let walk_route_link = link.new_route(MyKey::Waiting, dispatcher_types::RouteAction::Default, 32).await.unwrap();
 
-    let client1 = tokio::spawn(run_client(walk_route_link, wait_route, link.new_line(), MyKey::Waiting));
+    let client1 = tokio::spawn(run_client(walk_route_link, link.new_line(), MyKey::Waiting));
     // Для видимости пауза
     // Pause for visibility
     tokio::time::sleep(std::time::Duration::from_secs_f32(0.1)).await;
-    let client2 = tokio::spawn(run_client(run_route_link, run_route, link.new_line(), MyKey::Running));
+    let client2 = tokio::spawn(run_client(run_route_link, link.new_line(), MyKey::Running));
 
 
     let _ = tokio::join!(client1, client2);
@@ -130,30 +148,22 @@ async fn main() {
 
 pub async fn run_client(
     route_link: Option<dispatcher_types::DispatcherReply<MyStage, TrackRule<MyKey>>>,
-    purr_route: train_route::PurrRoute<MyStage, TrackRule<MyKey>>,
-    line: Sender<dispatcher_types::DispatcherCommand<MyKey>>,
+    line: Sender<dispatcher_types::DispatcherCommand<MyStage, MyKey>>,
     key: MyKey
-) -> Result<(), dispatcher_types::PurrError> {
+) -> Result<(), dispatcher_types::DispatcherError> {
     println!("Clien init: {:?}", key);
-    let mut siding = train_siding::PurrSiding::new(32);
 
-    // Выгружаем цепочку в буфер
-    // Offloading the chain into buffer
-    siding.launch(MyStage::Disconnect, train_types::BufferMode::Clear, &purr_route).unwrap();
+    // Выбираем стадию которую хотим 
+    // We select the stage we want
+    let stage = iff!(key == MyKey::Running ; MyStage::RunDisconnect ; MyStage::WaitDisconnect);
 
     if let Some(dispatcher_types::DispatcherReply::PurrStation { rx_reply }) = route_link {
         // Создаем новую станцию line это просто копия из линка
         // Create a new station; line is just a copy from link
         let mut station = station_link::PurrStation::new(line, rx_reply, key);
-
-        // Для максимальной скорости был выбран метод серелизации через rkyv в Bytes
-        // Важно читайте предупреждение!
-        // Serialization via rkyv into Bytes was chosen for maximum speed
-        // Important: read the warning!
-        let bytes = station.siding_to_byte(&mut siding)?;
         // Отправляем команду о прикреплении вагона к основному поезду
         // Send command to attach carriage to main train
-        let _ = station.send_command(dispatcher_types::DispatcherCommand::Attach { siding_data: bytes, key: station.get_key() }).await?;
+        let _ = station.send_command(dispatcher_types::DispatcherCommand::Attach { carriage: stage, key: station.get_key() }).await?;
 
         loop {
             // Запрашиваю текущую стадию что бы сделать проверки
@@ -196,8 +206,8 @@ pub async fn run_client(
                         };
                         
                         match (from.carriage, from.rule, key) {
-                            (MyStage::Disconnect, TrackRule::RunTimer(timer), MyKey::Running) if timer.is_key(key) => break,
-                            (MyStage::Disconnect, TrackRule::WaitTimer(timer), MyKey::Waiting) if timer.is_key(key) => break,
+                            (MyStage::RunDisconnect, TrackRule::RunTimer(timer), MyKey::Running) if timer.is_key(key) => break,
+                            (MyStage::WaitDisconnect, TrackRule::WaitTimer(timer), MyKey::Waiting) if timer.is_key(key) => break,
                              _ => {}
                         };
                     }

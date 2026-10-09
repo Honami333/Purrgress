@@ -3,13 +3,16 @@ use std::collections::HashMap;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Sender;
 use tokio::sync::mpsc::Receiver;
+
 use wibr::MakeFull;
 
-use crate::cat_malloc::train_route::RouteBox;
-use crate::types::PurrStep;
+use crate::cat_depot::train_cursor::PurrCursor;
+use crate::cat_depot::train_rule::PurrRule;
+use crate::cat_depot::train_track::PurrTrack;
+use crate::cat_depot::train_core::*;
 
-use crate::cat_malloc::purr_train::*;
-use crate::cat_malloc::train_types::*;
+use crate::cat_malloc::train::*;
+use crate::cat_malloc::train_route::RouteBox;
 
 use super::dispatcher_types::*;
 use super::station_link::*;
@@ -24,8 +27,8 @@ use super::station_link::*;
 })]
 #[Ret((Self, PurrLink<T, U, C>))]
 #[RetWith((Self, PurrLink::new(tx, line_rx)))]
-pub struct PurrDispatcher<T: PurrStep, U: PurrRule, C: PurrKey, S: PurrTrack<RouteBox<T, U>> = cursorvec::CursorVec<RouteBox<T, U>>> {
-    #[Some(PurrTrain::new())] pub purr_train: PurrTrain<T, U, S>,
+pub struct PurrDispatcher<T: PurrStep, U: PurrRule, C: PurrKey, S: PurrTrack> {
+    pub purr_train: PurrTrain<S>,
     #[Some(rx)] pub channel: Receiver<DispatcherCommand<T, C>>,
     #[Some(line_tx)] pub line_channel: Sender<DispatcherReply<T, U>>,
     #[Some(0)] pub line_count: usize,
@@ -33,12 +36,17 @@ pub struct PurrDispatcher<T: PurrStep, U: PurrRule, C: PurrKey, S: PurrTrack<Rou
     #[Some(HashMap::new())] pub dynamic_routes: HashMap<C, Sender<DispatcherReply<T, U>>>
 }
 
+#[cfg(feature = "cursor")]
+impl<T: PurrStep, U: PurrRule, C: PurrKey> PurrDispatcher<T, U, C, PurrCursor<RouteBox<T, U>>> {
+    pub fn with_cursor(channel_cap: usize) -> (Self, PurrLink<T, U, C>) { Self::new(PurrTrain::with_cursor(), channel_cap) }
+}
+
 impl<T, U, C, S> PurrDispatcher<T, U, C, S> 
 where 
     T: PurrStep,
     U: PurrRule,
     C: PurrKey,
-    S: PurrTrack<RouteBox<T, U>>
+    S: PurrTrack<Step = T, Rule = U>
 {
     pub fn add_route(&mut self, key: C, route_action: RouteAction, channel_cap: usize) -> Result<Receiver<DispatcherReply<T, U>>, DispatcherError> {
         let (tx, rx) = mpsc::channel(channel_cap);
@@ -121,6 +129,19 @@ where
         };
         None
     }
+
+    pub fn get_route_mut(&mut self, key: C, route_action: RouteAction) -> Option<&mut Sender<DispatcherReply<T, U>>> {
+        if self.line_count <= FAST_ROUTES_CAPACITY || matches!(route_action, RouteAction::GetConfigure { find_all: true }) {
+            let key_sender_reply_op = self.fast_routes.iter_mut().find(|k| k.key == key && k.sender.is_some());
+            if let Some(key_sender_reply) = key_sender_reply_op {
+                return key_sender_reply.sender.as_mut();
+            };
+        };
+        if self.line_count > FAST_ROUTES_CAPACITY || matches!(route_action, RouteAction::GetConfigure { find_all: true }) {
+            return self.dynamic_routes.get_mut(&key);
+        };
+        None
+    }
 }
 
 impl<T, U, C, S> PurrDispatcher<T, U, C, S> 
@@ -128,7 +149,7 @@ where
     T: PurrStep,
     U: PurrRule,
     C: PurrKey,
-    S: PurrTrack<RouteBox<T, U>>
+    S: PurrTrack<Step = T, Rule = U>
 {
     pub async fn read_command(&mut self) -> Option<DispatcherCommand<T, C>> { self.channel.recv().await }
 

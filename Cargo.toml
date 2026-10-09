@@ -1,6 +1,6 @@
 [package]
 name = "purrgress"
-version = "0.6.0"
+version = "1.0.0"
 edition = "2024"
 
 documentation = "https://docs.rs"
@@ -21,42 +21,26 @@ exclude = [
 ]
 
 [dependencies]
-anyhow = "1.0.103"
 bevy_ecs  = { version = "0.18", optional = true, default-features = false }
-petgraph = { version = "0.8.3", optional = true }
-purrgress-macros = { version = "0.5.2", path = "./purrgress-macros", optional = true  }
-cursorvec = { version = "0.2.0", optional = true }
+purrgress-macros = { version = "1.0.0", path = "./purrgress-macros", optional = true  }
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros", "sync", "time"], optional = true }
-rkyv = { version = "0.8.18", features = ["bytes-1"], optional = true }
+rkyv = { version = "0.8.18", optional = true }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
-wibr = { version = "0.2.11", features = ["make_full"] }
+wibr = { version = "0.2.16", features = ["make_full"] }
 
 [features]
-default = []
+default = ["train"]
 bevy_ecs = ["dep:bevy_ecs"]
-train = ["purrgress-macros/train", "macros", "cursorvec"]
-cursorvec = ["dep:cursorvec"]
-dispatcher = ["purrgress-macros/dispatcher", "train", "dep:tokio"]
-animator = ["purrgress-macros/animator", "scrap", "macros", "dep:petgraph"]
-scrap = ["purrgress-macros/scrap", "macros", "dep:petgraph"]
+train = ["macros"]
+dispatcher = ["train", "dep:tokio"]
 rkyv = ["dep:rkyv"]
 serde = ["dep:serde"]
 macros = ["dep:purrgress-macros"]
+single = []
+spatial = []
+cursor = []
 
-[[example]]
-name = "basic_test"
-path = "examples/basic_test.rs"
-required-features = ["scrap"]
 
-[[example]]
-name = "pandemonium_fps_test"
-path = "examples/pandemonium_fps_test.rs"
-required-features = ["animator", "scrap"]
-
-[[example]]
-name = "work_under_tets"
-path = "examples/work_under_tets.rs"
-required-features = ["scrap"]
 
 [[example]]
 name = "purr_train"
@@ -67,3 +51,6 @@ required-features = ["train"]
 name = "purr_dispatcher"
 path = "examples/purr_dispatcher.rs"
 required-features = ["dispatcher"]
+
+[package.metadata.docs.rs]
+all-features = true

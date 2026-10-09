@@ -3,9 +3,8 @@ use tokio::sync::mpsc::Receiver;
 
 use wibr::{New, Make};
 
-use crate::types::PurrStep;
-
-use crate::cat_malloc::train_types::*;
+use crate::cat_depot::train_core::*;
+use crate::cat_depot::train_rule::PurrRule;
 
 use super::dispatcher_types::*;
 

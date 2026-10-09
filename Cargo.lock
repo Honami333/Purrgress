@@ -3,12 +3,6 @@
 version = 4
 
 [[package]]
-name = "anyhow"
-version = "1.0.103"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a4385e2e34eb35d6b3efe798b9eb88096925d87726c0798709bf56d9ed84af3"
-
-[[package]]
 name = "async-channel"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -93,7 +87,7 @@ version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec6b36504169b644acd26a5469fd8d371aa6f1d73ee5c01b1b1181ae1cefbf9b"
 dependencies = [
- "foldhash 0.2.0",
+ "foldhash",
  "futures-channel",
  "hashbrown 0.16.1",
  "portable-atomic",
@@ -223,12 +217,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
-name = "cursorvec"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4cc6b63f3bf7883076f49a6a175255ceaa12305af4cb49d698a3a745e811c3f"
-
-[[package]]
 name = "derive_more"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -291,12 +279,6 @@ checksum = "1d674e81391d1e1ab681a28d99df07927c6d4aa5b027d7da16ba32d1d21ecd99"
 
 [[package]]
 name = "foldhash"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
-
-[[package]]
-name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
@@ -351,15 +333,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47d60b12902ba28e2730cd37e95b8c9223af2808df9e902d4df49588d1470606"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "hashbrown"
-version = "0.15.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
-dependencies = [
- "foldhash 0.1.5",
 ]
 
 [[package]]
@@ -454,18 +427,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "petgraph"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8701b58ea97060d5e5b155d383a69952a60943f0e6dfe30b04c287beb0b27455"
-dependencies = [
- "fixedbitset",
- "hashbrown 0.15.5",
- "indexmap",
- "serde",
-]
-
-[[package]]
 name = "pin-project"
 version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -537,12 +498,9 @@ dependencies = [
 
 [[package]]
 name = "purrgress"
-version = "0.6.0"
+version = "1.0.0"
 dependencies = [
- "anyhow",
  "bevy_ecs",
- "cursorvec",
- "petgraph",
  "purrgress-macros",
  "rkyv",
  "serde",
@@ -552,7 +510,7 @@ dependencies = [
 
 [[package]]
 name = "purrgress-macros"
-version = "0.5.2"
+version = "1.0.0"
 dependencies = [
  "quote",
  "syn 2.0.117",
@@ -908,18 +866,18 @@ dependencies = [
 
 [[package]]
 name = "wibr"
-version = "0.2.11"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47f787838776e10e04a4985e69511e838894582e3c5dd6c494098b070634170a"
+checksum = "813be5515e75bb3cb80579d97f7ad04b95e2c82f221a86f515bbb7edfdb9301d"
 dependencies = [
  "wibr-forge",
 ]
 
 [[package]]
 name = "wibr-forge"
-version = "0.2.11"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9cce1b24741dd4a1ca79287b0d18cd7883a71871e76dab632d064c29701ebce"
+checksum = "caeafb12d10740ca915ac702e53a28bea1c3924db55f7054482be27f581b1692"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -7,11 +7,9 @@ use tokio::sync::mpsc::Receiver;
 
 use wibr::MakeFull;
 
-use crate::types::PurrStep;
-use crate::types::InsertPosition;
-
+use crate::cat_depot::train_core::*;
+use crate::cat_depot::train_rule::PurrRule;
 use crate::cat_malloc::train_route::*;
-use crate::cat_malloc::train_types::*;
 
 pub const FAST_ROUTES_CAPACITY: usize = 16;
 
@@ -22,7 +20,8 @@ impl<T: Debug + Default + PartialEq + Eq + Hash + Copy> PurrKey for T {}
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
-#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DispatcherCommand<T: PurrStep, C: PurrKey> {
     AddRoute { key: C, action: RouteAction, channel_cap: usize },
     DeleteRoute { key: C, action: RouteAction },
@@ -47,8 +46,8 @@ pub enum DispatcherReply<T: PurrStep, U: PurrRule> {
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DispatcherError {
     DuplicateInFastRoutes,
@@ -68,8 +67,6 @@ impl fmt::Display for DispatcherError {
             DispatcherError::LineChannelClosed => write!(f, "Line channel is closed, receiver dropped"),
             DispatcherError::RouteChannelClosed => write!(f, "Route reply channel is closed, receiver dropped"),
             DispatcherError::Internal(msg) => write!(f, "Internal Error: {}", msg),
-            
-            
         }
     }
 }
@@ -77,8 +74,8 @@ impl fmt::Display for DispatcherError {
 impl Error for DispatcherError {}
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RouteAction {
     Default,
@@ -87,7 +84,9 @@ pub enum RouteAction {
     GetConfigure { find_all: bool }
 }
 
-
+#[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
+#[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, MakeFull)]
 pub struct DispatchData<T: PurrStep, C: PurrKey> {
     #[None] pub command: Option<DispatcherCommand<T, C>>,

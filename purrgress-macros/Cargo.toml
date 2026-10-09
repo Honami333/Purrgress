@@ -1,6 +1,6 @@
 [package]
 name = "purrgress-macros"
-version = "0.5.2"
+version = "1.0.0"
 edition = "2024"
 
 documentation = "https://docs.rs"
@@ -23,9 +23,3 @@ proc-macro = true
 [dependencies]
 syn = { version = "2.0", features = ["full"] }
 quote = "1.0"  
-
-[features]
-train = []
-animator = []
-scrap = []
-dispatcher = []

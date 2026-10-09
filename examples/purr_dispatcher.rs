@@ -1,12 +1,12 @@
 use purrgress::cat_malloc::train_design;
 use purrgress::cat_malloc::train_route;
 use purrgress::cat_malloc::train_siding;
-use purrgress::cat_malloc::train_types::{self, PurrRule};
 use purrgress::cat_telegraph::dispatcher;
 use purrgress::cat_telegraph::dispatcher_types;
 use purrgress::cat_telegraph::dispatcher_types::DispatcherCommand;
 use purrgress::cat_telegraph::station_link;
-use purrgress::cat_telegraph::dispatcher_condition::{TrackRule, RunTimer, WaitTimer};
+use purrgress::cat_telegraph::dispatcher_condition::TrackRule;
+use purrgress::cat_depot::train_core;
 use purrgress::PurrStep;
 
 use tokio::sync::mpsc::Sender;
@@ -47,7 +47,7 @@ async fn main() {
     let delta = 0.0001;
     // Создаем единый диспетчер работы поезда и линк для внешних поключений
     // Create a single train dispatcher and a link for external connections
-    let (mut dispatcher, mut link) = dispatcher::PurrDispatcher::<MyStage, TrackRule<MyKey>, MyKey>::new(32);
+    let (mut dispatcher, mut link) = dispatcher::PurrDispatcher::with_cursor(32);
     tokio::spawn(async move {
         // Обычное конструирование чертежа
         // Standard design construction
@@ -75,10 +75,10 @@ async fn main() {
 
          // Обычное запикание шаблонов
         // Standard baking of templates
-        let mut route = train_route::PurrRoute::new(32);
-        route.construct_schedule(&disign, train_types::BufferMode::Keep).unwrap();
+        let mut route = train_route::PurrRoute::new();
+        route.construct_schedule(&disign, train_core::SaveMode::Keep, train_core::DuplicatePolicy::Overwrite).unwrap();
 
-        let mut siging = train_siding::PurrSiding::new(32);
+        let mut siging = train_siding::PurrSiding::new();
 
         // Асихронная задача токио с циклом опрашивания диспечера
         // Tokio async task with a dispatcher polling loop
@@ -112,13 +112,13 @@ async fn main() {
                         };
                     };
                     if let Some(carriage) = dispatcher_data.carriage {
-                        siging.launch(carriage, train_types::BufferMode::Clear, &route).unwrap();
+                        siging.launch(carriage, train_core::SaveMode::Clear, &route).unwrap();
                     };
                     if let Some(command) = dispatcher_data.command {
                         match command {
-                            DispatcherCommand::Attach { .. } => dispatcher.purr_train.attach(&mut siging),
-                            DispatcherCommand::Replace { .. } => dispatcher.purr_train.replace(&mut siging),
-                            DispatcherCommand::RerouteAt { position, .. } => dispatcher.purr_train.reroute_at(&mut siging, position),
+                            DispatcherCommand::Attach { .. } => dispatcher.purr_train.attach(&mut siging).unwrap(),
+                            DispatcherCommand::Replace { .. } => dispatcher.purr_train.replace(&mut siging).unwrap(),
+                            DispatcherCommand::RerouteAt { position, .. } => dispatcher.purr_train.reroute_at(&mut siging, position).unwrap(),
                             _ => {}
                         };
                     };
@@ -185,11 +185,14 @@ pub async fn run_client(
                 // If this is my condition or someone else's processing time exceeded, I send train advance command
                 // Important: sending commands on match will result in chaos
                 // Hint: for a large number of conditions, you can use match
-                if let Some(timer) = route_box.rule.as_ref_rule::<RunTimer<MyKey>>() && ((key == MyKey::Running && timer.is_key(key)) || timer.overflow() ) {
-                    advance_reply = station.send_command(dispatcher_types::DispatcherCommand::AdvanceTrain { key }).await?;
-                };
-                if let Some(timer) = route_box.rule.as_ref_rule::<WaitTimer<MyKey>>() && ((key == MyKey::Waiting && timer.is_key(key)) || timer.overflow()) {
-                    advance_reply = station.send_command(dispatcher_types::DispatcherCommand::AdvanceTrain { key }).await?;
+                match route_box.rule {
+                    TrackRule::RunTimer(timer) if (key == MyKey::Running && timer.is_key(key)) || timer.overflow() => {
+                        advance_reply = station.send_command(dispatcher_types::DispatcherCommand::AdvanceTrain { key }).await?;
+                    },
+                    TrackRule::WaitTimer(timer) if (key == MyKey::Waiting && timer.is_key(key)) || timer.overflow() => {
+                        advance_reply = station.send_command(dispatcher_types::DispatcherCommand::AdvanceTrain { key }).await?;
+                    }
+                    _ => {}
                 };
             };
 
@@ -197,12 +200,11 @@ pub async fn run_client(
             // Now train returns route box of completed stage (move), processing remains standard
             if let Some(dispatcher_types::DispatcherReply::Advance { event }) = advance_reply {
                 match event {
-                    train_types::PurrTrainEvent::Idle => break,
-                    train_types::PurrTrainEvent::Transition { from, to } => {
-                        if let Some(to) = to {
-                            println!("State: {:?} next: {:?} my key: {:?}", from.carriage, to.carriage, key);
-                        } else {
-                            println!("State: {:?} my key: {:?}", from.carriage, key);
+                    train_core::PurrTrainEvent::Idle => break,
+                    train_core::PurrTrainEvent::Transition { from, to } => {
+                        match to {
+                            Some(to) => println!("State: {:?} next: {:?} my key: {:?}", from.carriage, to.carriage, key),
+                            None => println!("State: {:?} my key: {:?}", from.carriage, key)
                         };
                         
                         match (from.carriage, from.rule, key) {

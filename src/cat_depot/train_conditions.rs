@@ -2,7 +2,6 @@ use std::fmt::Debug;
 
 use wibr::Make;
 
-
 pub trait PurrCondition: Copy {
     fn is_finished(&self) -> bool;
 }

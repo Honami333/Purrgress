@@ -1,10 +1,10 @@
 use purrgress_macros::PurrRule;
 
-use purrgress::cat_telegraph::dispatcher_types::PurrKey;
-use purrgress::cat_depot::train_conditions::{self, PurrCondition};
-
 use wibr::MakeFull;
 
+use crate::cat_depot::train_conditions::{self, PurrCondition};
+
+use super::dispatcher_core::PurrKey;
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
@@ -31,7 +31,7 @@ impl<Y: PurrKey> TrackRule<Y> {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, MakeFull)]
 #[Extern(main_timer: f32)]
-#[Extern( waiting_timer: f32)]
+#[Extern(waiting_timer: f32)]
 pub struct RunTimer<Y: PurrKey> {
     #[Functional({ train_conditions::PurrTimer::new(main_timer) })] pub main_timer: train_conditions::PurrTimer,
     #[Functional({ train_conditions::PurrTimer::new(waiting_timer) })] pub waiting_timer: train_conditions::PurrTimer,

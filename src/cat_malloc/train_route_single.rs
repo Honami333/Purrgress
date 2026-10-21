@@ -7,11 +7,10 @@ use crate::cat_depot::train_core::*;
 use crate::cat_depot::train_route::RouteScheduler;
 use crate::cat_depot::train_rule::PurrRule;
 use crate::cat_depot::train_error::*;
-use crate::cat_malloc::train_route::RouteBox;
-use crate::cat_malloc::train_siding::PurrSiding;
 
+use super::train_route::RouteBox;
+use super::train_siding::PurrSiding;
 use super::train_design::PurrDesign;
-
 
 #[macro_export]
 macro_rules! single_array {

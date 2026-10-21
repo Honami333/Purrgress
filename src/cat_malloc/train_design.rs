@@ -6,7 +6,6 @@ use crate::cat_depot::train_rule::PurrRule;
 use crate::cat_depot::train_core::*;
 use crate::cat_depot::train_error::*;
 
-
 /// **PurrDesign** is a raw draft that stores blueprints.
 /// 
 /// It is intended for convenient (human-friendly) addition of stages and nested chains.

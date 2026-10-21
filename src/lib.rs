@@ -1,6 +1,5 @@
 #![warn(missing_docs)]
 
-
 extern crate self as purrgress;
 
 #[cfg(feature = "rkyv")]
@@ -10,14 +9,17 @@ pub use serde;
 
 #[cfg(feature = "train")]
 pub use purrgress_macros::{PurrStep, PurrRule};
+#[cfg(feature = "dispatcher")]
+pub use purrgress_macros::{PurrCommand, PurrReply, PurrKey};
 
 
 #[cfg(feature = "dispatcher")]
 pub mod cat_telegraph {
     pub mod dispatcher_condition;
-    pub mod dispatcher_types;
+    pub mod dispatcher_error;
+    pub mod dispatcher_core;
+    pub mod dispatcher_link;
     pub mod dispatcher;
-    pub mod station_link;
 }
 
 #[cfg(feature = "train")]

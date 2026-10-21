@@ -7,7 +7,6 @@ use wibr::{New, Make, MakeFull};
 
 use super::train_conditions::PurrCondition;
 
-
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -84,97 +83,61 @@ pub struct PurrVec {
 impl Add for PurrVec {
     type Output = Self;
 
-    fn add(mut self, rhs: Self) -> Self::Output {
-        self += rhs;
-        self
-    }
+    fn add(mut self, rhs: Self) -> Self::Output { self += rhs; self }
 }
 
 impl Sub for PurrVec {
     type Output = Self;
 
-    fn sub(mut self, rhs: Self) -> Self::Output {
-        self -= rhs;
-        self
-    }
+    fn sub(mut self, rhs: Self) -> Self::Output { self -= rhs; self }
 }
 
 impl Mul for PurrVec {
     type Output = Self;
 
-    fn mul(mut self, rhs: Self) -> Self::Output {
-        self *= rhs;
-        self
-    }
+    fn mul(mut self, rhs: Self) -> Self::Output { self *= rhs; self }
 }
 
 impl Div for PurrVec {
     type Output = Self;
 
-    fn div(mut self, rhs: Self) -> Self::Output {
-        self /= rhs;
-        self
-    }
+    fn div(mut self, rhs: Self) -> Self::Output { self /= rhs; self }
 }
 
 impl Mul<f32> for PurrVec {
     type Output = Self;
 
-    fn mul(mut self, rhs: f32) -> Self::Output {
-        self *= rhs;
-        self
-    }
+    fn mul(mut self, rhs: f32) -> Self::Output { self *= rhs; self }
 }
 
 impl Div<f32> for PurrVec {
     type Output = Self;
 
-    fn div(mut self, rhs: f32) -> Self::Output {
-        self /= rhs;
-        self
-    }
+    fn div(mut self, rhs: f32) -> Self::Output { self /= rhs; self }
 }
 
 impl AddAssign for PurrVec {
-    fn add_assign(&mut self, rhs: Self) {
-        self.x += rhs.x;
-        self.y += rhs.y;
-    }
+    fn add_assign(&mut self, rhs: Self) { self.x += rhs.x; self.y += rhs.y; }
 }
 
 impl SubAssign for PurrVec {
-    fn sub_assign(&mut self, rhs: Self) {
-        self.x -= rhs.x;
-        self.y -= rhs.y;
-    }
+    fn sub_assign(&mut self, rhs: Self) { self.x -= rhs.x; self.y -= rhs.y; }
 }
 
 impl MulAssign for PurrVec {
-    fn mul_assign(&mut self, rhs: Self) {
-        self.x *= rhs.x;
-        self.y *= rhs.y;
-    }
+    fn mul_assign(&mut self, rhs: Self) { self.x *= rhs.x; self.y *= rhs.y; }
 }
 
 impl DivAssign for PurrVec {
-    fn div_assign(&mut self, rhs: Self) {
-        self.x /= rhs.x;
-        self.y /= rhs.y;
-    }
+    fn div_assign(&mut self, rhs: Self) { self.x /= rhs.x; self.y /= rhs.y; }
 }
 
 impl MulAssign<f32> for PurrVec {
-    fn mul_assign(&mut self, rhs: f32) {
-        self.x *= rhs;
-        self.y *= rhs;
-    }
+    fn mul_assign(&mut self, rhs: f32) { self.x *= rhs; self.y *= rhs; }
 }
 
 impl DivAssign<f32> for PurrVec {
-    fn div_assign(&mut self, rhs: f32) {
-        self.x /= rhs;
-        self.y /= rhs;
-    }
+    fn div_assign(&mut self, rhs: f32) { self.x /= rhs; self.y /= rhs; }
 }
 
 impl PurrVec {

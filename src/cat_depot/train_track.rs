@@ -1,10 +1,10 @@
 use std::ops::RangeBounds;
 
-use crate::cat_depot::train_core::PurrStep;
-use crate::cat_depot::train_error:: TrainResult;
-use crate::cat_depot::train_rule::PurrRule;
 use crate::cat_malloc::train_route::RouteBox;
 
+use super::train_core::PurrStep;
+use super::train_error:: TrainResult;
+use super::train_rule::PurrRule;
 
 pub trait PurrTrack {
     type Step: PurrStep;
@@ -29,7 +29,6 @@ pub trait PurrTrack {
     fn tr_as_mut_slice(&mut self) -> &mut [RouteBox<Self::Step, Self::Rule>];
 
     fn tr_extend<I: IntoIterator<Item = RouteBox<Self::Step, Self::Rule>>>(&mut self, iter: I) -> TrainResult<(), Self::Step>;
-    fn tr_extend_from_slice(&mut self, slice: &[RouteBox<Self::Step, Self::Rule>])  -> TrainResult<(), Self::Step>;
 
     fn tr_splice<'a, I: IntoIterator<Item = RouteBox<Self::Step, Self::Rule>> + 'a>(
         &'a mut self, range: impl RangeBounds<usize>, replace_with: I

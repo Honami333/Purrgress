@@ -30,15 +30,23 @@ wibr = { version = "0.2.16", features = ["make_full"] }
 
 [features]
 default = ["train"]
+
+train = ["macros", "purrgress-macros/train"]
+dispatcher = ["train", "macros", "purrgress-macros/dispatcher", "dep:tokio"]
+
 bevy_ecs = ["dep:bevy_ecs"]
-train = ["macros"]
-dispatcher = ["train", "dep:tokio"]
 rkyv = ["dep:rkyv"]
 serde = ["dep:serde"]
+
 macros = ["dep:purrgress-macros"]
+
 single = []
 spatial = []
 cursor = []
+
+core = []
+alloc = ["core"]
+std = ['alloc']
 
 
 

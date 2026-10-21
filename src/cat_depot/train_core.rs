@@ -1,13 +1,12 @@
 use std::fmt::Debug;
 use std::hash::Hash;
 
-use crate::cat_depot::train_error::{TrainError, TrainResult};
 use crate::cat_malloc::train_route::RouteBox;
 
+use super::train_error::{TrainError, TrainResult};
 use super::train_rule::PurrRule;
 
 pub const DEFAULT_CAPACITY: usize = 16;
-
 
 pub trait PurrStep: Debug + Copy + PartialEq + Eq + Hash {}
 

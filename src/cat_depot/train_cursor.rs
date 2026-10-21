@@ -1,13 +1,13 @@
-use std::ops::Bound;
+use std::ops::{Bound, RangeBounds};
 
 use wibr::MakeFull;
 
-use crate::cat_depot::train_error::TrainResult;
-use crate::cat_depot::train_track::PurrTrack;
 use crate::cat_malloc::train_route::RouteBox;
-use crate::cat_depot::train_core::PurrStep;
-use crate::cat_depot::train_rule::PurrRule;
 
+use super::train_error::TrainResult;
+use super::train_track::PurrTrack;
+use super::train_core::PurrStep;
+use super::train_rule::PurrRule;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, MakeFull)]
 #[Fn(with_container)]
@@ -61,11 +61,6 @@ where
         Ok(())
     }
 
-    fn tr_extend_from_slice(&mut self, slice: &[RouteBox<Self::Step, Self::Rule>])  -> TrainResult<(), Self::Step> {
-        self.vector.extend_from_slice(slice);
-        Ok(())
-    }
-
     fn tr_splice<'a, I: IntoIterator<Item = RouteBox<Self::Step, Self::Rule>> + 'a>(
         &'a mut self, range: impl std::ops::RangeBounds<usize>, replace_with: I
     ) -> TrainResult<impl Iterator<Item = RouteBox<Self::Step, Self::Rule>>, Self::Step> {
@@ -94,7 +89,7 @@ where
     }
 }
 
-pub fn start_bound(range: &impl std::ops::RangeBounds<usize>) -> usize {
+pub fn start_bound(range: &impl RangeBounds<usize>) -> usize {
     match range.start_bound() {
         Bound::Included(&c) => c,
         Bound::Excluded(&c) => c + 1,
@@ -102,10 +97,93 @@ pub fn start_bound(range: &impl std::ops::RangeBounds<usize>) -> usize {
     }
 }
 
-pub fn end_bound(range: &impl std::ops::RangeBounds<usize>, max_range: usize) -> usize {
+pub fn end_bound(range: &impl RangeBounds<usize>, max_range: usize) -> usize {
     match range.end_bound() {
         Bound::Included(&e) => e + 1,
         Bound::Excluded(&e) => e,
         Bound::Unbounded => max_range
+    }
+}
+
+#[cfg(test)]
+mod purr_cursor_test {
+    use super::*;
+
+    #[test]
+    fn cursor_starts_at_zero() {
+        assert_eq!(PurrCursor::<i32>::new().cursor, 0);
+        assert_eq!(PurrCursor::<i32>::with_capacity(10).cursor, 0);
+        assert_eq!(PurrCursor::with_container(vec![1, 2, 3]).cursor, 0);
+    }
+
+    #[test]
+    fn clamp_cursor_to_len_cases() {
+        let mut purr_cursor = PurrCursor::with_container(vec![1, 2, 3]);
+
+        purr_cursor.cursor = 10;
+        purr_cursor.clamp_cursor_to_len();
+        assert_eq!(purr_cursor.cursor, 3);
+
+        purr_cursor.cursor = 3;
+        purr_cursor.clamp_cursor_to_len();
+        assert_eq!(purr_cursor.cursor, 3);
+
+        purr_cursor.cursor = 2;
+        purr_cursor.clamp_cursor_to_len();
+        assert_eq!(purr_cursor.cursor, 2);
+
+        purr_cursor.cursor = 0;
+        purr_cursor.clamp_cursor_to_len();
+        assert_eq!(purr_cursor.cursor, 0);
+
+        let mut empty_purr_cursor = PurrCursor::<i32>::new();
+        empty_purr_cursor.cursor = 5;
+        empty_purr_cursor.clamp_cursor_to_len();
+        assert_eq!(empty_purr_cursor.cursor, 0);
+    }
+
+    #[test]
+    fn clamp_cursor_to_capacity_cases() {
+        let mut purr_cursor = PurrCursor::<i32>::with_capacity(10);
+        let vector_capacity = purr_cursor.vector.capacity();
+
+        purr_cursor.cursor = vector_capacity + 5;
+        purr_cursor.clamp_cursor_to_capacity();
+        assert_eq!(purr_cursor.cursor, vector_capacity);
+
+        purr_cursor.cursor = vector_capacity;
+        purr_cursor.clamp_cursor_to_capacity();
+        assert_eq!(purr_cursor.cursor, vector_capacity);
+
+        purr_cursor.cursor = 3;
+        purr_cursor.clamp_cursor_to_capacity();
+        assert_eq!(purr_cursor.cursor, 3);
+    }
+
+    #[test]
+    fn start_bound_cases() {
+        assert_eq!(start_bound(&(5..)), 5);
+        assert_eq!(start_bound(&(5..10)), 5);
+        assert_eq!(start_bound(&(0..)), 0);
+        assert_eq!(start_bound(&(..)), 0);
+        assert_eq!(start_bound(&(..5)), 0);
+        assert_eq!(start_bound(&(Bound::Excluded(5), Bound::Unbounded)), 6);
+        assert_eq!(start_bound(&(Bound::Excluded(0), Bound::Unbounded)), 1);
+    }
+
+    #[test]
+    fn end_bound_cases() {
+        assert_eq!(end_bound(&(..=5), 10), 6);
+        assert_eq!(end_bound(&(..5), 10), 5);
+        assert_eq!(end_bound(&(5..10), 20), 10);
+        assert_eq!(end_bound(&(5..), 10), 10);
+        assert_eq!(end_bound(&(..), 10), 10);
+        assert_eq!(end_bound(&(0..=0), 10), 1);
+        assert_eq!(end_bound(&(..0), 10), 0);
+
+        assert_eq!(end_bound(&(..=15), 10), 16);
+        assert_eq!(end_bound(&(..15), 10), 15);
+        assert_eq!(end_bound(&(..=10), 10), 11);
+        assert_eq!(end_bound(&(..10), 10), 10);
     }
 }

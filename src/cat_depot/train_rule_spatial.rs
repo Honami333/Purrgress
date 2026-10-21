@@ -5,7 +5,6 @@ use crate::PurrRule;
 use super::train_conditions;
 use super::train_conditions_spatial::{self, PurrVec};
 
-
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

@@ -1,8 +1,8 @@
-use crate::cat_depot::train_core::PurrStep;
-use crate::cat_depot::train_rule::PurrRule;
-use crate::cat_depot::train_error::TrainResult;
 use crate::cat_malloc::train_siding::PurrSiding;
 
+use super::train_core::PurrStep;
+use super::train_rule::PurrRule;
+use super::train_error::TrainResult;
 
 pub trait RouteScheduler {
     type Step: PurrStep;

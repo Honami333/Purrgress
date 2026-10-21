@@ -15,7 +15,6 @@ pub enum MyStage {
     IWRChain
 }
 
-
 fn main() {
     let mut purr_train = train::PurrTrain::with_cursor();
     let mut purr_design = train_design::PurrDesign::new();

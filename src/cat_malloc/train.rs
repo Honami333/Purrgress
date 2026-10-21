@@ -9,6 +9,7 @@ use crate::cat_depot::train_core::*;
 use super::train_route::RouteBox;
 use super::train_siding::PurrSiding;
 
+pub type CursorTrain<T, U> = PurrTrain<PurrCursor<RouteBox<T, U>>>;
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
 #[cfg_attr(feature = "rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
@@ -19,7 +20,7 @@ pub struct PurrTrain<S> {
 }
 
 #[cfg(feature = "cursor")]
-impl<T, U> PurrTrain<PurrCursor<RouteBox<T, U>>> where T: PurrStep, U: PurrRule {
+impl<T, U> CursorTrain<T, U> where T: PurrStep, U: PurrRule {
     pub fn with_cursor() -> Self { Self::new(PurrCursor::tr_new()) }
 }
 
@@ -37,7 +38,7 @@ impl<S> PurrTrain<S> where S: PurrTrack {
     pub fn clear_line(&mut self) { self.line.tr_clear(); }
 
     pub fn attach(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>) -> TrainResult<(), S::Step> { self.line.tr_extend(purr_siding.line.drain(..)) }
-    pub fn attach_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>]) -> TrainResult<(), S::Step> { self.line.tr_extend_from_slice(slice) }
+    pub fn attach_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>]) -> TrainResult<(), S::Step> { self.line.tr_extend(slice.iter().copied()) }
 
     pub fn replace(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>) -> TrainResult<(), S::Step> {
         self.clear_line();

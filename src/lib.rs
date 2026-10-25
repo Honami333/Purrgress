@@ -15,10 +15,22 @@ pub use purrgress_macros::{PurrCommand, PurrReply, PurrKey};
 
 #[cfg(feature = "dispatcher")]
 pub mod cat_telegraph {
+    #[cfg(feature = "bundled_line")]
+    pub mod dispatcher_line {
+        pub mod double;
+        pub mod dynamic;
+        pub mod fast;
+    }
     pub mod dispatcher_condition;
     pub mod dispatcher_error;
     pub mod dispatcher_core;
     pub mod dispatcher_link;
+    #[cfg(feature = "bundled_mail")]
+    pub mod dispatcher_mail {
+        pub mod back_and_forth;
+        pub mod error;
+        pub mod telegraphist;
+    }
     pub mod dispatcher;
 }
 
@@ -47,6 +59,3 @@ pub mod cat_malloc {
     pub mod train_route;
     pub mod train_siding;
 }
-
-
-

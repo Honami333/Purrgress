@@ -30,6 +30,7 @@ where
     /// 
     /// # Warning
     /// If the carriage is already in blueprints, the method will overwrite it
+    #[inline]
     pub fn single(&mut self, carriage: T, rule: U) {
         let design = DesignBox::new(rule);
         self.add_blueprints(carriage, design);
@@ -39,6 +40,7 @@ where
     /// 
     /// # Warning
     /// If the carriage is already in blueprints, the method will overwrite it
+    #[inline]
     pub fn chain(&mut self, carriage: T, rule: U, coupling: Vec<T>) {
         let mut design = DesignBox::new(rule);
         design.set_coupling(coupling);
@@ -49,6 +51,7 @@ where
     /// 
     /// # Errors
     /// * `TrainError::DuplicateCarriage { carriage: T }` - if the carriage is already in blueprints
+    #[inline]
     pub fn try_single(&mut self, carriage: T, rule: U) -> TrainResult<(), T> {
         if self.contains_carriage(carriage) { return Err(TrainError::DuplicateCarriage { carriage }); };
         self.single(carriage, rule);
@@ -60,6 +63,7 @@ where
     /// # Errors
     /// * `TrainError::DuplicateCarriage { carriage: T }` - if the carriage is already in blueprints
     /// * `TrainError::EmptyCoupling` - if the passed coupling contains no carriage
+    #[inline]
     pub fn try_chain(&mut self, carriage: T, rule: U, coupling: Vec<T>) -> TrainResult<(), T> {
         if self.contains_carriage(carriage) { return Err(TrainError::DuplicateCarriage { carriage }); };
         let mut design = DesignBox::new(rule);
@@ -72,13 +76,13 @@ where
     /// 
     /// # Warning
     /// If the carriage is already in blueprints, the method will overwrite it
-    pub fn add_blueprints(&mut self, carriage: T, design: DesignBox<T, U>) { self.blueprints.insert(carriage, design); }
+    #[inline] pub fn add_blueprints(&mut self, carriage: T, design: DesignBox<T, U>) { self.blueprints.insert(carriage, design); }
 
     /// Checks for the presence of the carriage in blueprints
-    pub fn contains_carriage(&self, carriage: T) -> bool { self.blueprints.contains_key(&carriage) }
+    #[inline] pub fn contains_carriage(&self, carriage: T) -> bool { self.blueprints.contains_key(&carriage) }
 
     /// Completely clears blueprints
-    pub fn clear(&mut self) { self.blueprints.clear(); }
+    #[inline] pub fn clear(&mut self) { self.blueprints.clear(); }
 }
 
 /// **DesignBox** - this is a container designed for a specific carriage inside PurrDesign that stores its rule and coupling
@@ -107,7 +111,7 @@ where
     /// # Warning
     /// If coupling is already set, the method will overwrite it
     /// If you pass an empty coupling, the method will write it as Some(Vec::new())
-    pub fn set_coupling(&mut self, coupling: Vec<T>) { self.coupling = Some(coupling); }
+    #[inline] pub fn set_coupling(&mut self, coupling: Vec<T>) { self.coupling = Some(coupling); }
 
     /// Unlike set_coupling, it validates and returns TrainResult<(), T>
     /// 
@@ -118,6 +122,7 @@ where
     /// # Warning
     /// In case the coupling is already defined and you pass a new empty coupling
     /// The method will return exactly TrainError::CouplingAlreadyDefined due to priority
+    #[inline]
     pub fn validated_set_coupling(&mut self, coupling: Vec<T>) -> TrainResult<(), T> {
         if self.coupling_is_some() { return Err(TrainError::CouplingAlreadyDefined); };
         if coupling.is_empty() { return Err(TrainError::EmptyCoupling); };
@@ -126,10 +131,10 @@ where
     }
 
     /// Checks for the existence of the coupling
-    pub fn coupling_is_some(&self) -> bool { self.coupling.is_some() }
+    #[inline] pub fn coupling_is_some(&self) -> bool { self.coupling.is_some() }
 
     /// Checks for the absence of the coupling
-    pub fn coupling_is_none(&self) -> bool { self.coupling.is_none() }
+    #[inline] pub fn coupling_is_none(&self) -> bool { self.coupling.is_none() }
 }
 
 // A block of tests for PurrDesign

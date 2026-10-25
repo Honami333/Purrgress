@@ -17,8 +17,11 @@ pub enum PurrRuleSpatial {
 }
 
 impl PurrRuleSpatial {
-    pub fn instant() -> Self { Self::Instant(train_conditions::PurrInstant) }
-    pub fn timer(duration: f32) -> Self { Self::Timer(train_conditions::PurrTimer::new(duration)) }
-    pub fn flag() -> Self { Self::Flag(train_conditions::PurrFlag::new()) }
-    pub fn proximity(current: PurrVec, target: PurrVec) -> Self { Self::Proximity(train_conditions_spatial::PurrProximity::new(current, target)) }
+    #[inline] pub fn instant() -> Self { Self::Instant(train_conditions::PurrInstant) }
+
+    #[inline] pub fn timer(duration: f32) -> Self { Self::Timer(train_conditions::PurrTimer::new(duration)) }
+
+    #[inline] pub fn flag() -> Self { Self::Flag(train_conditions::PurrFlag::new()) }
+
+    #[inline] pub fn proximity(current: PurrVec, target: PurrVec) -> Self { Self::Proximity(train_conditions_spatial::PurrProximity::new(current, target)) }
 }

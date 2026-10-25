@@ -20,6 +20,7 @@ pub enum InsertPosition {
 }
 
 impl InsertPosition {
+    #[inline]
     pub fn get(self, index: usize, max_index: usize) -> usize {
         let index = match self {
             InsertPosition::Forward => index,
@@ -49,6 +50,7 @@ pub enum DuplicatePolicy {
 }
 
 impl DuplicatePolicy {
+    #[inline]
     pub fn should_overwrite<T: PurrStep>(self, carriage: T) -> TrainResult<bool, T> {
         match self {
             DuplicatePolicy::RaiseError => Err(TrainError::DuplicateCarriage { carriage }),
@@ -69,6 +71,7 @@ pub enum ChangeRuleCount {
 }
 
 impl ChangeRuleCount {
+    #[inline]
     pub fn is_final_rule_count(&mut self) -> bool {
         match self {
             ChangeRuleCount::First => true,

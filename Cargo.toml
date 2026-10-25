@@ -29,20 +29,22 @@ serde = { version = "1.0.229", features = ["derive"], optional = true }
 wibr = { version = "0.2.16", features = ["make_full"] }
 
 [features]
-default = ["train"]
+default = ["train", "std"]
 
 train = ["macros", "purrgress-macros/train"]
+single = []
+spatial = []
+cursor = []
+
 dispatcher = ["train", "macros", "purrgress-macros/dispatcher", "dep:tokio"]
+bundled_line = []
+bundled_mail = []
 
 bevy_ecs = ["dep:bevy_ecs"]
 rkyv = ["dep:rkyv"]
 serde = ["dep:serde"]
 
 macros = ["dep:purrgress-macros"]
-
-single = []
-spatial = []
-cursor = []
 
 core = []
 alloc = ["core"]

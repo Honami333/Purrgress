@@ -1,0 +1,151 @@
+USERS: 1, PER_USER: 1000000, STEP: 1, DISPATCHER CAP: 3000000
+step: 0 | time: 0.0721321, count: 1000000, count per second: 13863453.303037066                     
+time: 0.0958329 | [##############################] 1/1 (100%)
+
+USERS: 1, PER_USER: 10000000, STEP: 1, DISPATCHER CAP: 1024
+step: 0 | time: 20.5251888, count: 10000000, count per second: 487206.23705054546                   
+time: 20.5389249 | [##############################] 1/1 (100%)
+
+USERS: 1, PER_USER: 100000, STEP: 1, DISPATCHER CAP: 1, SLEEP_TIME: 0 micros
+step: 0 | time: 0.0216192, count: 100000, count per second: 4625518.058022498                       
+time: 0.0249016 | [##############################] 1/1 (100%)
+
+USERS: 10000, PER_USER: 100, STEP: 1, DISPATCHER CAP: 3000000
+step: 0 | time: 0.127437, count: 1000000, count per second: 7847014.603294177                       
+time: 0.1473341 | [##############################] 1/1 (100%)
+
+USERS: 1000, PER_USER: 100000, STEP: 1, DISPATCHER CAP: 1000000
+step: 0 | time: 13.0965222, count: 100000000, count per second: 7635614.896296667                   
+time: 13.1068889 | [##############################] 1/1 (100%)
+
+USERS: 8, PER_USER: 12500000, STEP: 1, DISPATCHER CAP: 100000
+step: 0 | time: 15.6476494, count: 100000000, count per second: 6390736.234159234                   
+time: 15.6690717 | [##############################] 1/1 (100%)
+
+USERS: 1, PER_USER: 1000000, STEP: 64, DISPATCHER CAP: 3000000
+step: 0 | time: 0.0779687, count: 1000000, count per second: 12825659.527477052                     
+step: 1 | time: 0.0787275, count: 1000000, count per second: 12702041.853227906                     
+step: 2 | time: 0.0768583, count: 1000000, count per second: 13010956.526490957                     
+step: 3 | time: 0.0816501, count: 1000000, count per second: 12247382.428190535                     
+step: 4 | time: 0.0780791, count: 1000000, count per second: 12807524.676898172                     
+step: 5 | time: 0.0753792, count: 1000000, count per second: 13266259.12718628                      
+step: 6 | time: 0.0797166, count: 1000000, count per second: 12544438.674002655                     
+step: 7 | time: 0.0792726, count: 1000000, count per second: 12614699.152039923                     
+step: 8 | time: 0.0691944, count: 1000000, count per second: 14452036.580994993                     
+step: 9 | time: 0.1050016, count: 1000000, count per second: 9523664.40130436                       
+step: 10 | time: 0.0985259, count: 1000000, count per second: 10149615.48181747                     
+step: 11 | time: 0.0875682, count: 1000000, count per second: 11419670.611020897                    
+step: 12 | time: 0.0766076, count: 1000000, count per second: 13053535.158391597                    
+step: 13 | time: 0.0705386, count: 1000000, count per second: 14176635.203987602                    
+step: 14 | time: 0.0871255, count: 1000000, count per second: 11477695.967311522                    
+step: 15 | time: 0.0947788, count: 1000000, count per second: 10550882.686845582                    
+step: 16 | time: 0.0783569, count: 1000000, count per second: 12762117.950046519                    
+step: 17 | time: 0.0705323, count: 1000000, count per second: 14177901.472091509                    
+step: 18 | time: 0.0729538, count: 1000000, count per second: 13707305.171217948                    
+step: 19 | time: 0.0861597, count: 1000000, count per second: 11606354.24682305                     
+step: 20 | time: 0.07539, count: 1000000, count per second: 13264358.66825839                       
+step: 21 | time: 0.0739585, count: 1000000, count per second: 13521096.290487234                    
+step: 22 | time: 0.0649719, count: 1000000, count per second: 15391269.14866273                     
+step: 23 | time: 0.0729139, count: 1000000, count per second: 13714806.09321405                     
+step: 24 | time: 0.0753648, count: 1000000, count per second: 13268793.919707876                    
+step: 25 | time: 0.0693405, count: 1000000, count per second: 14421586.230269467                    
+step: 26 | time: 0.0938274, count: 1000000, count per second: 10657867.53123288                     
+step: 27 | time: 0.0632723, count: 1000000, count per second: 15804704.428320132                    
+step: 28 | time: 0.0796566, count: 1000000, count per second: 12553887.562361438                    
+step: 29 | time: 0.0727574, count: 1000000, count per second: 13744306.421065073                    
+step: 30 | time: 0.1105087, count: 1000000, count per second: 9049061.295626499                     
+step: 31 | time: 0.1044605, count: 1000000, count per second: 9572996.491496786                     
+step: 32 | time: 0.0666099, count: 1000000, count per second: 15012783.385052372                    
+step: 33 | time: 0.0767811, count: 1000000, count per second: 13024038.467800017                    
+step: 34 | time: 0.0926261, count: 1000000, count per second: 10796093.109825416                    
+step: 35 | time: 0.071151, count: 1000000, count per second: 14054616.238703601                     
+step: 36 | time: 0.0749036, count: 1000000, count per second: 13350493.167217597                    
+step: 37 | time: 0.0912748, count: 1000000, count per second: 10955926.498880304                    
+step: 38 | time: 0.0850505, count: 1000000, count per second: 11757720.413166296                    
+step: 39 | time: 0.0770854, count: 1000000, count per second: 12972625.166373918                    
+step: 40 | time: 0.0828188, count: 1000000, count per second: 12074553.120789                       
+step: 41 | time: 0.1019644, count: 1000000, count per second: 9807344.524167258                     
+step: 42 | time: 0.0906722, count: 1000000, count per second: 11028738.687271291                    
+step: 43 | time: 0.0762485, count: 1000000, count per second: 13115012.09859866                     
+step: 44 | time: 0.0712276, count: 1000000, count per second: 14039501.541537268                    
+step: 45 | time: 0.0875604, count: 1000000, count per second: 11420687.890873043                    
+step: 46 | time: 0.0768817, count: 1000000, count per second: 13006996.463397661                    
+step: 47 | time: 0.1052924, count: 1000000, count per second: 9497361.63293837                      
+step: 48 | time: 0.1052895, count: 1000000, count per second: 9497623.219789248                     
+step: 49 | time: 0.0773407, count: 1000000, count per second: 12929802.807577383                    
+step: 50 | time: 0.0774227, count: 1000000, count per second: 12916108.583141638                    
+step: 51 | time: 0.0798546, count: 1000000, count per second: 12522760.11651176                     
+step: 52 | time: 0.081855, count: 1000000, count per second: 12216724.696108975                     
+step: 53 | time: 0.0645176, count: 1000000, count per second: 15499646.608057337                    
+step: 54 | time: 0.0865836, count: 1000000, count per second: 11549531.320019035                    
+step: 55 | time: 0.0974098, count: 1000000, count per second: 10265907.537023995                    
+step: 56 | time: 0.0738572, count: 1000000, count per second: 13539641.361979604                    
+step: 57 | time: 0.0869338, count: 1000000, count per second: 11503005.73539866                     
+step: 58 | time: 0.1050784, count: 1000000, count per second: 9516703.718366476                     
+step: 59 | time: 0.0638166, count: 1000000, count per second: 15669904.068847291                    
+step: 60 | time: 0.0774086, count: 1000000, count per second: 12918461.256242847                    
+step: 61 | time: 0.0657761, count: 1000000, count per second: 15203090.484233635                    
+step: 62 | time: 0.0755946, count: 1000000, count per second: 13228458.117378755                    
+step: 63 | time: 0.0759916, count: 1000000, count per second: 13159349.191226397                    
+time: 0.6901997 | [##############################] 64/64 (100%)
+
+USERS: 1, PER_USER: 10000000, STEP: 32, DISPATCHER CAP: 100000, SLEEP_TIME: 0 micros
+step: 0 | time: 1.0081911, count: 10000000, count per second: 9918754.490096174                     
+step: 1 | time: 1.1618408, count: 10000000, count per second: 8607031.187061084                     
+step: 2 | time: 0.9888707, count: 10000000, count per second: 10112545.553225514                    
+step: 3 | time: 1.1326045, count: 10000000, count per second: 8829207.371152066                     
+step: 4 | time: 1.0357825, count: 10000000, count per second: 9654536.546041278                     
+step: 5 | time: 0.8923598, count: 10000000, count per second: 11206242.145825036                    
+step: 6 | time: 0.9573829, count: 10000000, count per second: 10445141.646043604                    
+step: 7 | time: 1.0264552, count: 10000000, count per second: 9742266.394091042                     
+step: 8 | time: 1.1205952, count: 10000000, count per second: 8923829.050847264                     
+step: 9 | time: 1.2370703, count: 10000000, count per second: 8083614.973215345                     
+step: 10 | time: 1.1886769, count: 10000000, count per second: 8412715.011118665                    
+step: 11 | time: 1.2510071, count: 10000000, count per second: 7993559.748781601                    
+step: 12 | time: 1.0489162, count: 10000000, count per second: 9533650.066611612                    
+step: 13 | time: 0.9648276, count: 10000000, count per second: 10364545.956189478                   
+step: 14 | time: 1.4202118000000001, count: 10000000, count per second: 7041203.290945758           
+step: 15 | time: 0.9319906, count: 10000000, count per second: 10729721.952131277                   
+step: 17 | time: 1.1213048, count: 10000000, count per second: 8918181.746836364                    
+step: 18 | time: 1.3027785, count: 10000000, count per second: 7675901.928071425                    
+step: 19 | time: 1.0351076, count: 10000000, count per second: 9660831.395692583                    
+step: 20 | time: 1.0029802, count: 10000000, count per second: 9970286.552017676                    
+step: 21 | time: 0.9938497, count: 10000000, count per second: 10061883.60272182                    
+step: 22 | time: 1.1382095, count: 10000000, count per second: 8785728.81354443                     
+step: 23 | time: 0.8773477, count: 10000000, count per second: 11397989.645382328                   
+step: 24 | time: 1.1554219, count: 10000000, count per second: 8654847.203432791                    
+step: 25 | time: 1.0853585, count: 10000000, count per second: 9213545.57042673                     
+step: 26 | time: 1.170396, count: 10000000, count per second: 8544116.692128135                     
+step: 30 | time: 1.099323, count: 10000000, count per second: 9096507.577845637                     
+step: 27 | time: 1.1631995, count: 10000000, count per second: 8596977.56059902                     
+step: 16 | time: 1.1937378, count: 10000000, count per second: 8377048.9633485675                   
+step: 28 | time: 1.1863508, count: 10000000, count per second: 8429209.977352398                    
+step: 29 | time: 0.9100051, count: 10000000, count per second: 10988949.40259126                    
+step: 31 | time: 0.9225124, count: 10000000, count per second: 10839962.693184394                   
+time: 6.8465917 | [##############################] 32/32 (100%)
+
+
+USERS: 100, PER_USER: 1000000, STEP: 4, DISPATCHER CAP: 500000, SLEEP_TIME: 20 micros
+step: 2 | time: 14.9855262, count: 100000000, count per second: 6673105.679799219                   
+step: 0 | time: 15.402618499999999, count: 100000000, count per second: 6492402.574276576           
+step: 3 | time: 15.9018066, count: 100000000, count per second: 6288593.649478796                   
+step: 1 | time: 16.2036085, count: 100000000, count per second: 6171464.831429369                   
+time: 16.2349205 | [##############################] 4/4 (100%)
+
+USERS: 4, PER_USER: 250000000, STEP: 1, DISPATCHER CAP: 3000000, SLEEP_TIME: 0 micros
+step: 0 | time: 144.6974204, count: 1000000000, count per second: 6910973.238055044                 
+time: 144.7202559 | [##############################] 1/1 (100%)
+
+
+
+USERS: 1, PER_USER: 1000000000, STEP: 1, DISPATCHER CAP: 1024, SLEEP_TIME: 0 micros
+step: 0 | time: 134.5882928, count: 1000000000, count per second: 7430066.755405043                 
+time: 134.6027492 | [##############################] 1/1 (100%)
+
+USERS: 9, PER_USER: 10000000, STEP: 5, DISPATCHER CAP: 8192, SLEEP_TIME: 0 micros
+step: 1 | time: 19.2357463, count: 90000000, count per second: 4678789.093823722                    
+step: 2 | time: 20.9536007, count: 90000000, count per second: 4295204.499148445                    
+step: 0 | time: 21.0744901, count: 90000000, count per second: 4270565.957844931                    
+step: 4 | time: 19.1901007, count: 90000000, count per second: 4689918.068017226                    
+step: 3 | time: 21.1995286, count: 90000000, count per second: 4245377.418439389                    
+time: 40.4360452 | [##############################] 5/5 (100%)

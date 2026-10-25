@@ -22,14 +22,14 @@ pub fn derive_purr_rule_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
         quote::quote! {
             #[automatically_derived]
             impl #impl_genetics purrgress::cat_depot::train_rule::UnpackRule<#inner_type> for #enum_ident #ty_generics #where_clause {
-                fn unpack(self) -> Option<#inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
-                fn unpack_ref(&self) -> Option<&#inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
-                fn unpack_mut(&mut self) -> Option<&mut #inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
+                #[inline] fn unpack(self) -> Option<#inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
+                #[inline] fn unpack_ref(&self) -> Option<&#inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
+                #[inline] fn unpack_mut(&mut self) -> Option<&mut #inner_type> { if let Self::#variant_name(field) = self { Some(field) } else { None } }
             }
 
             #[automatically_derived]
             impl #impl_genetics From<#inner_type> for #enum_ident #ty_generics #where_clause {
-                fn from(value: #inner_type) -> Self { Self::#variant_name(value) }
+                #[inline] fn from(value: #inner_type) -> Self { Self::#variant_name(value) }
             }
         }
     });
@@ -52,6 +52,7 @@ pub fn derive_purr_rule_impl(input: proc_macro::TokenStream) -> proc_macro::Toke
         
         #[automatically_derived]
         impl #impl_genetics purrgress::cat_depot::train_rule::PurrRule for #enum_ident #ty_generics #where_clause {
+            #[inline]
             fn is_finished(&self) -> bool {
                 match self {
                     #(#is_finished),*

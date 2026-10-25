@@ -19,25 +19,28 @@ pub struct PurrProximity {
 
 impl PurrProximity {
     // Adding another vector to the current position vector
-    pub fn forward(&mut self, add: PurrVec) { self.current += add; } 
+
+    #[inline] pub fn forward(&mut self, add: PurrVec) { self.current += add; } 
 
     // Subtracting another vector from the current position vector
-    pub fn backward(&mut self, sub: PurrVec) { self.current -= sub; }
+    #[inline] pub fn backward(&mut self, sub: PurrVec) { self.current -= sub; }
 
     // Multiplying the current position vector by another vector
-    pub fn expand(&mut self, mul: PurrVec) { self.current *= mul; }
+    #[inline] pub fn expand(&mut self, mul: PurrVec) { self.current *= mul; }
 
     // Dividing the current position vector by another vector
-    pub fn shrink(&mut self, div: PurrVec) { if div.x != 0.0 && div.y != 0.0 { self.current /= div; } }
+    #[inline] pub fn shrink(&mut self, div: PurrVec) { if div.x != 0.0 && div.y != 0.0 { self.current /= div; } }
 
-    pub fn update_direction(&mut self) { self.direction.update(self.current, self.target); }
+    #[inline] pub fn update_direction(&mut self) { self.direction.update(self.current, self.target); }
 
     // Distance from the current position to the target position
-    pub fn get_distance(&self) -> f32 { self.current.distance(self.target) }
-    pub fn get_distance_not_sqrt(&self) -> f32 { self.current.distance_squared(self.target) }
+    #[inline] pub fn get_distance(&self) -> f32 { self.current.distance(self.target) }
+
+    #[inline] pub fn get_distance_not_sqrt(&self) -> f32 { self.current.distance_squared(self.target) }
 }
 
 impl PurrCondition for PurrProximity {
+    #[inline]
     fn is_finished(&self) -> bool {
         let tx = self.target.x;
         let ty = self.target.y;
@@ -66,7 +69,7 @@ pub struct PurrDirection {
 }
 
 impl PurrDirection {
-    pub fn update(&mut self, current: PurrVec, target: PurrVec) { *self = Self::from_purr_vec(current, target); }
+    #[inline] pub fn update(&mut self, current: PurrVec, target: PurrVec) { *self = Self::from_purr_vec(current, target); }
 }
 
 /// #PurrVec
@@ -82,73 +85,74 @@ pub struct PurrVec {
 
 impl Add for PurrVec {
     type Output = Self;
-
-    fn add(mut self, rhs: Self) -> Self::Output { self += rhs; self }
+ 
+    #[inline] fn add(mut self, rhs: Self) -> Self::Output { self += rhs; self }
 }
-
+ 
 impl Sub for PurrVec {
     type Output = Self;
-
-    fn sub(mut self, rhs: Self) -> Self::Output { self -= rhs; self }
+ 
+    #[inline] fn sub(mut self, rhs: Self) -> Self::Output { self -= rhs; self }
 }
-
+ 
 impl Mul for PurrVec {
     type Output = Self;
-
-    fn mul(mut self, rhs: Self) -> Self::Output { self *= rhs; self }
+ 
+    #[inline] fn mul(mut self, rhs: Self) -> Self::Output { self *= rhs; self }
 }
-
+ 
 impl Div for PurrVec {
     type Output = Self;
-
-    fn div(mut self, rhs: Self) -> Self::Output { self /= rhs; self }
+ 
+    #[inline] fn div(mut self, rhs: Self) -> Self::Output { self /= rhs; self }
 }
-
+ 
 impl Mul<f32> for PurrVec {
     type Output = Self;
-
-    fn mul(mut self, rhs: f32) -> Self::Output { self *= rhs; self }
+ 
+    #[inline] fn mul(mut self, rhs: f32) -> Self::Output { self *= rhs; self }
 }
-
+ 
 impl Div<f32> for PurrVec {
     type Output = Self;
-
-    fn div(mut self, rhs: f32) -> Self::Output { self /= rhs; self }
+ 
+    #[inline] fn div(mut self, rhs: f32) -> Self::Output { self /= rhs; self }
 }
-
+ 
 impl AddAssign for PurrVec {
-    fn add_assign(&mut self, rhs: Self) { self.x += rhs.x; self.y += rhs.y; }
+    #[inline] fn add_assign(&mut self, rhs: Self) { self.x += rhs.x; self.y += rhs.y; }
 }
-
+ 
 impl SubAssign for PurrVec {
-    fn sub_assign(&mut self, rhs: Self) { self.x -= rhs.x; self.y -= rhs.y; }
+    #[inline] fn sub_assign(&mut self, rhs: Self) { self.x -= rhs.x; self.y -= rhs.y; }
 }
-
+ 
 impl MulAssign for PurrVec {
-    fn mul_assign(&mut self, rhs: Self) { self.x *= rhs.x; self.y *= rhs.y; }
+    #[inline] fn mul_assign(&mut self, rhs: Self) { self.x *= rhs.x; self.y *= rhs.y; }
 }
-
+ 
 impl DivAssign for PurrVec {
-    fn div_assign(&mut self, rhs: Self) { self.x /= rhs.x; self.y /= rhs.y; }
+    #[inline] fn div_assign(&mut self, rhs: Self) { self.x /= rhs.x; self.y /= rhs.y; }
 }
-
+ 
 impl MulAssign<f32> for PurrVec {
-    fn mul_assign(&mut self, rhs: f32) { self.x *= rhs; self.y *= rhs; }
+    #[inline] fn mul_assign(&mut self, rhs: f32) { self.x *= rhs; self.y *= rhs; }
 }
-
+ 
 impl DivAssign<f32> for PurrVec {
-    fn div_assign(&mut self, rhs: f32) { self.x /= rhs; self.y /= rhs; }
+    #[inline] fn div_assign(&mut self, rhs: f32) { self.x /= rhs; self.y /= rhs; }
 }
 
 impl PurrVec {
-    pub fn length_squared(&self) -> f32 { self.x * self.x + self.y * self.y }
+    #[inline] pub fn length_squared(&self) -> f32 { self.x * self.x + self.y * self.y }
 
-    pub fn length(&self) -> f32 { self.length_squared().sqrt() }
+    #[inline] pub fn length(&self) -> f32 { self.length_squared().sqrt() }
 
-    pub fn distance_squared(&self, other: Self) -> f32 { (self.x - other.x).powi(2) + (self.y - other.y).powi(2) }
+    #[inline] pub fn distance_squared(&self, other: Self) -> f32 { (self.x - other.x).powi(2) + (self.y - other.y).powi(2) }
 
-    pub fn distance(&self, other: Self) -> f32 { self.distance_squared(other).sqrt() }
+    #[inline] pub fn distance(&self, other: Self) -> f32 { self.distance_squared(other).sqrt() }
 
+    #[inline]
     pub fn normalize(&mut self) {
         let len = self.length();
         match len > 0.0 {

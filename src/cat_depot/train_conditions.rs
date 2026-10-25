@@ -13,7 +13,7 @@ pub trait PurrCondition: Copy {
 pub struct PurrInstant;
 
 impl PurrCondition for PurrInstant {
-    fn is_finished(&self) -> bool { true }
+    #[inline] fn is_finished(&self) -> bool { true }
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
@@ -26,11 +26,11 @@ pub struct PurrTimer {
 }
 
 impl PurrTimer {
-    pub fn tick(&mut self, delta: f32) { self.time_elapsed += delta; }
+    #[inline] pub fn tick(&mut self, delta: f32) { self.time_elapsed += delta; }
 }
 
 impl PurrCondition for PurrTimer {
-    fn is_finished(&self) -> bool { self.time_elapsed >= self.duration }
+    #[inline] fn is_finished(&self) -> bool { self.time_elapsed >= self.duration }
 }
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
@@ -42,13 +42,15 @@ pub struct PurrFlag {
 }
 
 impl PurrFlag {
-    pub fn from_flag(state: bool) -> Self { Self { state } }
-    pub fn set(&mut self, new_state: bool) { self.state = new_state; }
-    pub fn reverse(&mut self) { self.state = !self.state; }
+    #[inline] pub fn from_flag(state: bool) -> Self { Self { state } }
+
+    #[inline] pub fn set(&mut self, new_state: bool) { self.state = new_state; }
+
+    #[inline] pub fn reverse(&mut self) { self.state = !self.state; }
 }
 
 impl PurrCondition for PurrFlag {
-    fn is_finished(&self) -> bool { self.state }
+    #[inline] fn is_finished(&self) -> bool { self.state }
 }
 
 #[cfg(test)]

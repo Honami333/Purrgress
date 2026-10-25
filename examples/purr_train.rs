@@ -64,3 +64,4 @@ fn design_single(purr_design: &mut train_design::PurrDesign<MyStage, PurrRuleLit
     purr_design.single(MyStage::Walk, PurrRuleLite::timer(1.0));
     purr_design.single(MyStage::Run, PurrRuleLite::timer(1.0));
 }
+

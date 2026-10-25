@@ -13,6 +13,11 @@ mod dispatcher {
     pub(crate) mod purr_key;
 }
 
+// impl<T: PurrStep, U: PurrRule, C: PurrCargo> UnpackCargo<PhantomRoute<T, U>> for C {
+//     #[inline] fn unpack_ref(&self) -> Option<&PhantomRoute<T, U>> { None }
+//     #[inline] fn unpack_mut(&mut self) -> Option<&mut PhantomRoute<T, U>> { None }
+// }
+
 #[cfg(feature = "dispatcher")]
 #[proc_macro_derive(PurrCommand)]
 pub fn derive_purr_command(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

@@ -1,14 +1,17 @@
 use wibr::New;
 
-use crate::cat_depot::train_cursor::PurrCursor;
 use crate::cat_depot::train_error::TrainResult;
 use crate::cat_depot::train_track::PurrTrack;
 use crate::cat_depot::train_rule::PurrRule;
 use crate::cat_depot::train_core::*;
 
+#[cfg(feature = "cursor")]
+use crate::cat_depot::train_cursor::PurrCursor;
+
 use super::train_route::RouteBox;
 use super::train_siding::PurrSiding;
 
+#[cfg(feature = "cursor")]
 pub type CursorTrain<T, U> = PurrTrain<PurrCursor<RouteBox<T, U>>>;
 
 #[cfg_attr(feature = "bevy_ecs", derive(bevy_ecs::prelude::Component))]
@@ -21,35 +24,45 @@ pub struct PurrTrain<S> {
 
 #[cfg(feature = "cursor")]
 impl<T, U> CursorTrain<T, U> where T: PurrStep, U: PurrRule {
-    pub fn with_cursor() -> Self { Self::new(PurrCursor::tr_new()) }
+    #[inline] pub fn with_cursor() -> Self { Self::new(PurrCursor::tr_new()) }
 }
 
 impl<S> PurrTrain<S> where S: PurrTrack {
-    pub fn get_current(&self) -> Option<RouteBox<S::Step, S::Rule>> { self.line.tr_get_current() }
-    pub fn get_current_ref(&self) -> Option<&RouteBox<S::Step, S::Rule>> { self.line.tr_get_current_ref() }
-    pub fn get_current_mut(&mut self) -> Option<&mut RouteBox<S::Step, S::Rule>> { self.line.tr_get_current_mut() }
-    pub fn get_cursor(&self) -> usize { self.line.tr_get_cursor() }
-    
-    pub fn line_as_slice(&self) -> &[RouteBox<S::Step, S::Rule>] { self.line.tr_as_slice() }
-    pub fn line_as_mut_slice(&mut self) -> &mut [RouteBox<S::Step, S::Rule>] { self.line.tr_as_mut_slice() }
-    
-    pub fn line_is_empty(&self) -> bool { self.line.tr_is_empty() }
-    pub fn line_len(&self) -> usize { self.line.tr_len() }
-    pub fn clear_line(&mut self) { self.line.tr_clear(); }
+    #[inline] pub fn get_current(&self) -> Option<RouteBox<S::Step, S::Rule>> { self.line.tr_get_current() }
 
-    pub fn attach(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>) -> TrainResult<(), S::Step> { self.line.tr_extend(purr_siding.line.drain(..)) }
-    pub fn attach_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>]) -> TrainResult<(), S::Step> { self.line.tr_extend(slice.iter().copied()) }
+    #[inline] pub fn get_current_ref(&self) -> Option<&RouteBox<S::Step, S::Rule>> { self.line.tr_get_current_ref() }
 
+    #[inline] pub fn get_current_mut(&mut self) -> Option<&mut RouteBox<S::Step, S::Rule>> { self.line.tr_get_current_mut() }
+
+    #[inline] pub fn get_cursor(&self) -> usize { self.line.tr_get_cursor() }
+    
+    #[inline] pub fn line_as_slice(&self) -> &[RouteBox<S::Step, S::Rule>] { self.line.tr_as_slice() }
+
+    #[inline] pub fn line_as_mut_slice(&mut self) -> &mut [RouteBox<S::Step, S::Rule>] { self.line.tr_as_mut_slice() }
+    
+    #[inline] pub fn line_is_empty(&self) -> bool { self.line.tr_is_empty() }
+
+    #[inline] pub fn line_len(&self) -> usize { self.line.tr_len() }
+
+    #[inline] pub fn clear_line(&mut self) { self.line.tr_clear(); }
+
+    #[inline] pub fn attach(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>) -> TrainResult<(), S::Step> { self.line.tr_extend(purr_siding.line.drain(..)) }
+
+    #[inline] pub fn attach_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>]) -> TrainResult<(), S::Step> { self.line.tr_extend(slice.iter().copied()) }
+
+    #[inline]
     pub fn replace(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>) -> TrainResult<(), S::Step> {
         self.clear_line();
         self.attach(purr_siding)
     }
 
+    #[inline]
     pub fn replace_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>]) -> TrainResult<(), S::Step> {
         self.clear_line();
         self.attach_slice(slice)
     }
 
+    #[inline]
     pub fn reroute_at(&mut self, purr_siding: &mut PurrSiding<S::Step, S::Rule>, insert_position: InsertPosition) -> TrainResult<(), S::Step> {
         let cursor = self.line.tr_get_cursor();
         let index = insert_position.get(cursor, self.line_len());
@@ -57,6 +70,7 @@ impl<S> PurrTrain<S> where S: PurrTrack {
         Ok(())
     }
 
+    #[inline]
     pub fn reroute_at_slice(&mut self, slice: &[RouteBox<S::Step, S::Rule>], insert_position: InsertPosition) -> TrainResult<(), S::Step> {
         let cursor = self.line.tr_get_cursor();
         let index = insert_position.get(cursor, self.line_len());
@@ -64,15 +78,13 @@ impl<S> PurrTrain<S> where S: PurrTrack {
         Ok(())
     }
 
-    pub fn shrink_line(&mut self, max_cursor: usize) {
+    #[inline]
+    pub fn shrink_line(&mut self, line_length: usize) {
         let cursor = self.line.tr_get_cursor();
-        if cursor > max_cursor {
-            drop(self.line.tr_drain(0..cursor)); 
-            let stepped = self.line.tr_set_cursor(0);
-            debug_assert!(stepped.is_ok());
-        };
+        if cursor > line_length { drop(self.line.tr_drain(0..cursor)); };
     }
 
+    #[inline]
     pub fn advance_train(&mut self) -> PurrTrainEvent<S::Step, S::Rule> {
         if let Some(route_box) = self.get_current() {
             if route_box.rule.is_finished() {

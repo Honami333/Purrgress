@@ -20,14 +20,22 @@ where
     Reply: PurrReply,
     K: PurrKey
 {
+    #[inline]
     pub fn send_command(&self, command: Command) -> DispatcherResult<()> {
         self.main_channel.try_send(command).map_err(|e| e.into())
     }
 
+    #[inline]
     pub fn read_reply(&mut self) -> Option<DispatcherResult<Reply>> {
         map_try_recv(self.line_channel.try_recv(), DispatcherError::LineChannelClosed)
     }
 
+     #[inline(never)]
+    pub async  fn send_command_async(&self, command: Command) -> DispatcherResult<()> {
+        self.main_channel.send(command).await.map_err(|_| DispatcherError::LineChannelClosed)
+    }
+
+     #[inline(never)]
     pub async fn read_reply_async(&mut self) -> DispatcherResult<Reply> {
         self.line_channel.recv().await.ok_or(DispatcherError::LineChannelClosed)
     }
@@ -44,15 +52,23 @@ impl<Command, Reply> PurrLink<Command, Reply>
 where
     Command: PurrCommand,
     Reply: PurrReply
-{   
+{
+    #[inline]
     pub fn send_command(&self, command: Command) -> DispatcherResult<()> {
         self.main_channel.try_send(command).map_err(|e| e.into())
     }
 
+    #[inline]
     pub fn read_reply(&mut self) -> Option<DispatcherResult<Reply>> {
         map_try_recv(self.link_channel.try_recv(), DispatcherError::LinkChannelClosed)
     }
 
+    #[inline(never)]
+    pub async  fn send_command_async(&self, command: Command) -> DispatcherResult<()> {
+        self.main_channel.send(command).await.map_err(|_| DispatcherError::LinkChannelClosed)
+    }
+
+     #[inline(never)]
     pub async fn read_reply_async(&mut self) -> DispatcherResult<Reply> {
         self.link_channel.recv().await.ok_or(DispatcherError::LinkChannelClosed)
     }

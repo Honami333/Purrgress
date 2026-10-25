@@ -56,6 +56,7 @@ where
     /// * `TrainError::DuplicateCarriage` - if DuplicatePolicy::RaiseError is chosen and a carriage value already exists in schedule
     /// * `TrainError::RecursiveCarriage` - if during chain unfolding, a carriage appears that causes infinite recursion
     /// * `TrainError::UnscheduledParam` - if a carriage from the chain was not found inside PurrDesign
+    #[inline(never)]
     pub fn construct_schedule(&mut self, purr_design: &PurrDesign<T, U>, save_mode: SaveMode, duplicate_policy: DuplicatePolicy) -> TrainResult<(), T> {
         if matches!(save_mode, SaveMode::Clear) { self.schedule.clear(); };
         for &carriage in purr_design.blueprints.keys() { if self.contains_carriage(carriage) { duplicate_policy.should_overwrite(carriage)?; }; };
@@ -75,6 +76,7 @@ where
     /// # Errors
     /// * `TrainError::RecursiveCarriage` - if during chain unfolding, a carriage appears that causes infinite recursion
     /// * `TrainError::UnscheduledParam` - if a carriage from either the argument or within the chain could not be found
+    #[inline(never)]
     pub fn bake_carriage(&mut self, carriage: T, purr_design: &PurrDesign<T, U>, bake_buffer: &mut Vec<RouteBox<T, U>>) -> TrainResult<(), T> {
         if self.visited_buffer.contains(&carriage) { return Err(TrainError::RecursiveCarriage { carriage }); };
 
@@ -93,7 +95,7 @@ where
     }
 
     /// Checks for the presence of the carriage in schedule
-    pub fn contains_carriage(&self, carriage: T) -> bool { self.schedule.contains_key(&carriage) }
+    #[inline] pub fn contains_carriage(&self, carriage: T) -> bool { self.schedule.contains_key(&carriage) }
 }
 
 impl<T, U> RouteScheduler for PurrRoute<T, U>
@@ -104,6 +106,18 @@ where
     type Step = T;
     type Rule = U;
 
+    /// route_as_slice is a method for fast slicing.
+    /// It was primarily conceived as a way to bypass PurrSiding, allowing for direct interaction with PurrTrain via slice methods.
+    /// 
+    /// # Errors
+    /// * `TrainError::UnscheduledParam` - if a carriage from either the argument or within the chain could not be found
+    #[inline]
+    fn route_as_slice(&self, carriage: Self::Step) -> TrainResult<&[RouteBox<Self::Step, Self::Rule>], Self::Step> {
+        if let Some(branch ) = self.schedule.get(&carriage) { return Ok(branch); };
+        Err( TrainError::UnscheduledParam { carriage } )
+    }
+
+    #[inline]
     fn load(&self, purr_siding: &mut PurrSiding<Self::Step, Self::Rule>, carriage: Self::Step) -> TrainResult<(), Self::Step> {
         if let Some(branch ) = self.schedule.get(&carriage) {
             purr_siding.line.extend_from_slice(branch);
@@ -176,16 +190,14 @@ mod purr_route_test {
         let mut purr_route = PurrRoute::new();
         let mut purr_design = construct_purr_design();
 
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::default());
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::default()).is_ok());
 
         assert!(purr_route.contains_carriage(TestCarriage::Component));
         assert!(purr_route.contains_carriage(TestCarriage::Assembly));
 
         purr_design.clear();
         purr_design.single(TestCarriage::Pipeline, PurrRuleLite::instant());
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::default());
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::default()).is_ok());
 
         assert!(purr_route.contains_carriage(TestCarriage::Component));
         assert!(purr_route.contains_carriage(TestCarriage::Assembly));
@@ -197,16 +209,14 @@ mod purr_route_test {
         let mut purr_route = PurrRoute::new();
         let mut purr_design = construct_purr_design();
 
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Clear, DuplicatePolicy::default());
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Clear, DuplicatePolicy::default()).is_ok());
 
         assert!(purr_route.contains_carriage(TestCarriage::Component));
         assert!(purr_route.contains_carriage(TestCarriage::Assembly));
 
         purr_design.clear();
         purr_design.single(TestCarriage::Pipeline, PurrRuleLite::instant());
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Clear, DuplicatePolicy::default());
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Clear, DuplicatePolicy::default()).is_ok());
 
         assert!(!purr_route.contains_carriage(TestCarriage::Component));
         assert!(!purr_route.contains_carriage(TestCarriage::Assembly));
@@ -218,8 +228,7 @@ mod purr_route_test {
         let mut purr_route = PurrRoute::new();
         let mut purr_design = construct_purr_design();
 
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::RaiseError);
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::RaiseError).is_ok());
 
         purr_design.clear();
         purr_design.single(TestCarriage::Component, PurrRuleLite::instant());
@@ -232,15 +241,13 @@ mod purr_route_test {
         let mut purr_route = PurrRoute::new();
         let mut purr_design = construct_purr_design();
 
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Ignore);
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Ignore).is_ok());
 
         assert_carriage_scheduled(&purr_route, TestCarriage::Component, PurrRuleLite::instant());
 
         purr_design.clear();
         purr_design.single(TestCarriage::Component, PurrRuleLite::flag());
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Ignore);
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Ignore).is_ok());
 
         assert_carriage_scheduled(&purr_route, TestCarriage::Component, PurrRuleLite::instant());
     }
@@ -250,15 +257,13 @@ mod purr_route_test {
         let mut purr_route = PurrRoute::new();
         let mut purr_design = construct_purr_design();
 
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Overwrite);
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Overwrite).is_ok());
 
         assert_carriage_scheduled(&purr_route, TestCarriage::Component, PurrRuleLite::instant());
 
         purr_design.clear();
         purr_design.single(TestCarriage::Component, PurrRuleLite::flag());
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Overwrite);
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::Keep, DuplicatePolicy::Overwrite).is_ok());
 
         assert_carriage_scheduled(&purr_route, TestCarriage::Component, PurrRuleLite::flag());
     }
@@ -271,12 +276,36 @@ mod purr_route_test {
         assert!(!purr_route.contains_carriage(TestCarriage::Pipeline));
 
         let purr_design = construct_purr_design();
-        let result = purr_route.construct_schedule(&purr_design, SaveMode::default(), DuplicatePolicy::default());
-        assert!(result.is_ok());
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::default(), DuplicatePolicy::default()).is_ok());
 
         assert!(purr_route.contains_carriage(TestCarriage::Component));
         assert!(purr_route.contains_carriage(TestCarriage::Assembly));
         assert!(!purr_route.contains_carriage(TestCarriage::Pipeline));
+    }
+
+    #[test]
+    fn route_as_slice_returns_correct_chain_for_coupled_carriage() {
+        let mut purr_route = PurrRoute::new();
+        let mut purr_design = construct_purr_design();
+
+        let coupling = vec![TestCarriage::Component, TestCarriage::Assembly];
+        purr_design.chain(TestCarriage::Pipeline, PurrRuleLite::instant(), coupling);
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::default(), DuplicatePolicy::default()).is_ok());
+
+        let target_route = [
+            RouteBox::new(TestCarriage::Component, PurrRuleLite::instant()),
+            RouteBox::new(TestCarriage::Assembly, PurrRuleLite::instant()),
+            RouteBox::new(TestCarriage::Pipeline, PurrRuleLite::instant())
+        ];
+        assert_eq!(purr_route.route_as_slice(TestCarriage::Pipeline), Ok(target_route.as_slice()));
+    }
+
+    #[test]
+    fn route_as_slice_returns_err_for_unscheduled_carriage() {
+        let mut purr_route = PurrRoute::new();
+        let purr_design = construct_purr_design();
+        assert!(purr_route.construct_schedule(&purr_design, SaveMode::default(), DuplicatePolicy::default()).is_ok());
+        assert_eq!(purr_route.route_as_slice(TestCarriage::Pipeline), Err(TrainError::UnscheduledParam { carriage: TestCarriage::Pipeline }));
     }
     
     fn construct_purr_design() -> PurrDesign<TestCarriage, PurrRuleLite> {

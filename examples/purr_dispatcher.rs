@@ -219,19 +219,190 @@
 //     };
 //     Ok(())
 // }
-
-use purrgress::cat_telegraph::dispatcher_core::{DoubleHotLine, DoubleHotLineDef, PurrHotLine, PurrReply};
-use purrgress_macros::{PurrCommand, PurrKey, PurrReply};
-use tokio::sync::mpsc::Sender;
-
-fn main() {
-    let mut i = DoubleHotLine::default();
-    i.add_route(Key(1), 12).unwrap();
-    let _u: Sender<UI> = i.delete_route(Key(1)).unwrap();
+use purrgress::{
+    PurrStep, cat_depot::{
+        train_core::{DuplicatePolicy, SaveMode},
+        train_rule::PurrRuleLite,
+    }, cat_malloc::{train::{CursorTrain}, train_design::PurrDesign, train_route::PurrRoute}, cat_telegraph::{
+        dispatcher::PurrDispatcher, dispatcher_line::double::DoubleHotLine, dispatcher_core::PurrHotLine, dispatcher_mail::{back_and_forth::{PurrCall, PurrCallKind}, telegraphist::PurrTelegraphist},
+    },
+};
+use std::io::Write;
+use std::time::{Duration, Instant};
+ 
+// cargo run --release --example purr_dispatcher --features "dispatcher cursor"
+ 
+const USERS: u32 = 9;
+const PER_USER: u32 = 10_000_000;
+const STEPS: u32 = 5;
+const NUM_THREADS: u32 = 3;
+const DISPATCHER_CAP: usize = 1024 * 8;
+const SLEEP_MICROS: u64 = 0;
+const BAR_WIDTH: usize = 30;
+ 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrStep)]
+pub enum MyStage {
+    Idle,
+    Walk,
+    Run,
+    IWRChain,
 }
-
-#[derive(Debug, PurrReply, PurrCommand)]
-struct UI;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PurrKey)]
-struct Key(usize);
+ 
+type Call = PurrCall<u32, MyStage>;
+ 
+fn user_call(user: u32, n: u32) -> Call {
+    let kind = match user {
+        0 => PurrCallKind::LineLen,
+        1 => match n % 3 {
+            0 => PurrCallKind::Attach { carriage: MyStage::IWRChain },
+            1 => PurrCallKind::Replace { carriage: MyStage::Walk },
+            _ => PurrCallKind::Attach { carriage: MyStage::Idle },
+        },
+        2 => PurrCallKind::AdvanceTrain,
+        _ => match n % 1000 {
+            0 => PurrCallKind::ClearLine,
+            1 => PurrCallKind::LineLen,
+            _ => PurrCallKind::GetCurrent,
+        },
+    };
+    Call::new(user + 1, kind)
+}
+ 
+fn build_route() -> PurrRoute<MyStage, PurrRuleLite> {
+    let mut design = PurrDesign::new();
+    design.single(MyStage::Idle, PurrRuleLite::timer(2.0));
+    design.single(MyStage::Walk, PurrRuleLite::timer(1.0));
+    design.single(MyStage::Run, PurrRuleLite::timer(1.0));
+    design.chain(
+        MyStage::IWRChain,
+        PurrRuleLite::instant(),
+        vec![MyStage::Idle, MyStage::Walk, MyStage::Run],
+    );
+    let mut route = PurrRoute::new();
+    route
+        .construct_schedule(&design, SaveMode::Keep, DuplicatePolicy::Overwrite)
+        .unwrap();
+    route
+}
+ 
+fn draw_bar(started: Instant, done: usize, total: usize) {
+    let progress = (done as f64 / total as f64).min(1.0);
+    let filled = (progress * BAR_WIDTH as f64).round() as usize;
+    print!(
+        "\rtime: {:.1} | [{}{}] {}/{} ({:.0}%)",
+        started.elapsed().as_secs_f64(),
+        "#".repeat(filled),
+        "-".repeat(BAR_WIDTH - filled),
+        done,
+        total,
+        progress * 100.0
+    );
+    let _ = std::io::stdout().flush();
+}
+ 
+#[tokio::main]
+async fn main() {
+    let route: &'static _ = Box::leak(Box::new(build_route()));
+ 
+    let started = Instant::now();
+    let mut handles = Vec::new();
+ 
+    for step in 0..STEPS {
+        let (mut dispatcher, mut operator, link) = tokio::spawn(async move {
+            let mut hotline = DoubleHotLine::default();
+            hotline.to_dynamic();
+            for user in 0..USERS {
+                hotline.add_route(user + 1, PER_USER as usize).unwrap();
+            }
+            let (dispatcher, link) =
+                PurrDispatcher::new(CursorTrain::<_, PurrRuleLite>::with_cursor(), hotline, DISPATCHER_CAP);
+            let link: &'static _ = Box::leak(Box::new(link));
+            let operator = PurrTelegraphist::new(link, Some(route));
+            (dispatcher, operator, link)
+        })
+        .await
+        .unwrap();
+ 
+        handles.push(tokio::spawn(async move {
+            let dispatch_task = tokio::spawn(async move {
+                let total = USERS * PER_USER;
+                let start = Instant::now();
+                let mut count = 0;
+                while count != total {
+                    if let Some(reply) = dispatcher.dispatch(&mut operator).unwrap() {
+                        _ = dispatcher.send_reply(&mut operator, reply);
+                        count += 1;
+                    }
+                }
+                let time = start.elapsed().as_secs_f64();
+                format!(
+                    "step: {} | time: {:.3}, count: {}, per second: {:.0}",
+                    step,
+                    time,
+                    count,
+                    count as f64 / time
+                )
+            });
+ 
+            let chunk_size = std::cmp::max(USERS / NUM_THREADS, 1) as usize;
+            let user_ids: Vec<u32> = (0..USERS).collect();
+ 
+            let senders: Vec<_> = user_ids
+                .chunks(chunk_size)
+                .map(|chunk| {
+                    let chunk = chunk.to_vec();
+                    tokio::spawn(async move {
+                        for user in chunk {
+                            for n in 0..PER_USER {
+                                while link.send_command(user_call(user, n)).is_err() {
+                                    if SLEEP_MICROS != 0 {
+                                        tokio::time::sleep(Duration::from_micros(SLEEP_MICROS))
+                                            .await;
+                                    }
+                                }
+                            }
+                        }
+                    })
+                })
+                .collect();
+ 
+            for sender in senders {
+                sender.await.unwrap();
+            }
+            dispatch_task.await.unwrap()
+        }));
+    }
+ 
+    println!(
+        "USERS: {}, PER_USER: {}, STEPS: {}, DISPATCHER CAP: {}, SLEEP: {} micros",
+        USERS, PER_USER, STEPS, DISPATCHER_CAP, SLEEP_MICROS
+    );
+ 
+    let total = handles.len();
+    let mut finished = 0;
+ 
+    while finished < total {
+        let mut progressed = false;
+ 
+        for handle in std::mem::take(&mut handles) {
+            if handle.is_finished() {
+                if let Ok(line) = handle.await {
+                    print!("\r{: <100}\r", "");
+                    println!("{}", line);
+                    finished += 1;
+                    progressed = true;
+                }
+            } else {
+                handles.push(handle);
+            }
+        }
+ 
+        if progressed || finished == 0 {
+            draw_bar(started, finished, total);
+        }
+        if finished < total {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    }
+    println!();
+}

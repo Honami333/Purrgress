@@ -20,11 +20,13 @@ where
     T: PurrStep,
     U: PurrRule
 {
+    #[inline]
     pub fn launch(&mut self, carriage: T, save_mode: SaveMode, route_scheduler: &impl RouteScheduler<Step = T, Rule = U>) -> TrainResult<(), T> {
         if matches!(save_mode, SaveMode::Clear) { self.clear_line(); };
         route_scheduler.load(self, carriage)
     }
 
+    #[inline]
     pub fn change_rule(&mut self, carriage: T, rule: U, mut change_rule_count: ChangeRuleCount) {
         for route_box in self.line.iter_mut() {
             if matches!(change_rule_count, ChangeRuleCount::Count(0)) { return; };
@@ -35,6 +37,7 @@ where
         };
     }
 
+    #[inline]
     pub fn change_rule_few(&mut self, route_boxes: &[RouteBox<T, U>], change_rule_count: ChangeRuleCount) {
         for &route_box in route_boxes.iter() {
             let mut route_rule_count = change_rule_count;
@@ -48,9 +51,11 @@ where
         };
     }
     
-    pub fn line_is_empty(&self) -> bool { self.line.is_empty() }
-    pub fn line_len(&self) -> usize { self.line.len() }
-    pub fn clear_line(&mut self) { self.line.clear(); }
+    #[inline] pub fn line_is_empty(&self) -> bool { self.line.is_empty() }
+
+    #[inline] pub fn line_len(&self) -> usize { self.line.len() }
+
+    #[inline] pub fn clear_line(&mut self) { self.line.clear(); }
 }
 
 #[cfg(test)]

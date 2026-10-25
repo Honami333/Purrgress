@@ -29,6 +29,8 @@ pub trait SingleSchedule {
     fn new_route(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step>;
     fn overwrite(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step>;
     fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>>;
+    fn get_ref(&self, carriage: Self::Step) -> Option<&RouteBox<Self::Step, Self::Rule>>;
+    fn get_mut(&mut self, carriage: Self::Step) -> Option<&mut RouteBox<Self::Step, Self::Rule>>;
     fn contains(&self, carriage: Self::Step) -> bool;
     fn clear(&mut self);
 }
@@ -43,7 +45,7 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn with_map() -> Self { Self::new(SingleMap::new()) }
+    #[inline] pub fn with_map() -> Self { Self::new(SingleMap::new()) }
 }
 
 impl<T, U> PurrRouteSingle<SingleVec<T, U>> 
@@ -51,10 +53,11 @@ where
     T: PurrStep,
     U: PurrRule
 {
-    pub fn with_vec() -> Self { Self::new(SingleVec::new()) }
+    #[inline] pub fn with_vec() -> Self { Self::new(SingleVec::new()) }
 }
 
 impl<Single> PurrRouteSingle<Single> where Single: SingleSchedule {
+    #[inline(never)]
     pub fn construct_schedule(
         &mut self,
         purr_design: &PurrDesign<Single::Step, Single::Rule>,
@@ -72,13 +75,19 @@ impl<Single> PurrRouteSingle<Single> where Single: SingleSchedule {
     }
 
     /// Checks for the presence of the carriage in schedule
-    pub fn contains_carriage(&self, carriage: Single::Step) -> bool { self.schedule.contains(carriage) }
+    #[inline] pub fn contains_carriage(&self, carriage: Single::Step) -> bool { self.schedule.contains(carriage) }
 }
 
 impl<Single> RouteScheduler for PurrRouteSingle<Single> where Single: SingleSchedule {
     type Step = Single::Step;
     type Rule = Single::Rule;
 
+    #[inline]
+    fn route_as_slice(&self, carriage: Self::Step) -> TrainResult<&[RouteBox<Self::Step, Self::Rule>], Self::Step> {
+        self.schedule.get_ref(carriage).ok_or(TrainError::UnscheduledParam { carriage }).map(|c| std::slice::from_ref(c))
+    }
+
+    #[inline]
     fn load(&self, purr_siding: &mut PurrSiding<Self::Step, Self::Rule>, carriage: Self::Step) -> TrainResult<(), Self::Step> {
         if let Some(branch ) = self.schedule.get(carriage) {
             purr_siding.line.push(branch);
@@ -101,6 +110,7 @@ where
     type Step = T;
     type Rule = U;
 
+    #[inline]
     fn new_route(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         match self.storage.entry(route_box.carriage) {
             Entry::Occupied(_) => return Err(TrainError::DuplicateCarriage { carriage: route_box.carriage }),
@@ -109,14 +119,21 @@ where
         Ok(())
     }
 
+    #[inline]
     fn overwrite(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         self.storage.insert(route_box.carriage, route_box);
         Ok(())
     }
 
-    fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> { self.storage.get(&carriage).copied() }
-    fn contains(&self, carriage: Self::Step) -> bool { self.storage.contains_key(&carriage) }
-    fn clear(&mut self) { self.storage.clear(); }
+    #[inline] fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> { self.storage.get(&carriage).copied() }
+
+    #[inline] fn get_ref(&self, carriage: Self::Step) -> Option<&RouteBox<Self::Step, Self::Rule>> { self.storage.get(&carriage) }
+
+    #[inline] fn get_mut(&mut self, carriage: Self::Step) -> Option<&mut RouteBox<Self::Step, Self::Rule>> { self.storage.get_mut(&carriage) }
+
+    #[inline] fn contains(&self, carriage: Self::Step) -> bool { self.storage.contains_key(&carriage) }
+
+    #[inline] fn clear(&mut self) { self.storage.clear(); }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Make)]
@@ -132,11 +149,13 @@ where
     type Step = T;
     type Rule = U;
 
+    #[inline]
     fn new_route(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         self.storage.push(route_box);
         Ok(())
     }
 
+    #[inline]
     fn overwrite(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         if let Some(index) = self.storage.iter().position(|r| r.carriage == route_box.carriage) {
             self.storage[index] = route_box;
@@ -145,9 +164,15 @@ where
         self.new_route(route_box)
     }
 
-    fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> { self.storage.iter().find(|r| r.carriage == carriage).copied() }
-    fn contains(&self, carriage: Self::Step) -> bool { self.storage.iter().any(|r| r.carriage == carriage) }
-    fn clear(&mut self) { self.storage.clear(); }
+    #[inline] fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> { self.storage.iter().find(|r| r.carriage == carriage).copied() }
+
+    #[inline] fn get_ref(&self, carriage: Self::Step) -> Option<&RouteBox<Self::Step, Self::Rule>> { self.storage.iter().find(|r| r.carriage == carriage) }
+
+    #[inline] fn get_mut(&mut self, carriage: Self::Step) -> Option<&mut RouteBox<Self::Step, Self::Rule>> { self.storage.iter_mut().find(|r| r.carriage == carriage) }
+
+    #[inline] fn contains(&self, carriage: Self::Step) -> bool { self.storage.iter().any(|r| r.carriage == carriage) }
+
+    #[inline] fn clear(&mut self) { self.storage.clear(); }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, New)]
@@ -163,6 +188,7 @@ where
     type Step = T;
     type Rule = U;
 
+    #[inline]
     fn new_route(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         if let Some(index) = self.storage.iter().position(|r| r.is_none()) {
             self.storage[index] = Some(route_box);
@@ -171,6 +197,7 @@ where
         Err(TrainError::StorageOverflow { capacity: self.storage.len() })
     }
 
+    #[inline]
     fn overwrite(&mut self, route_box: RouteBox<Self::Step, Self::Rule>) -> TrainResult<(), Self::Step> {
         if let Some(index) = self.storage.iter().position(|r| r.is_some_and(|r| r.carriage == route_box.carriage)) {
             self.storage[index] = Some(route_box);
@@ -179,12 +206,15 @@ where
         self.new_route(route_box)
     }
 
-    fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> {
-        self.storage.iter().flatten().find(|r| r.carriage == carriage).copied()
-    }
+    #[inline] fn get(&self, carriage: Self::Step) -> Option<RouteBox<Self::Step, Self::Rule>> { self.storage.iter().flatten().find(|r| r.carriage == carriage).copied() }
 
-    fn contains(&self, carriage: Self::Step) -> bool { self.storage.iter().flatten().any(|r| r.carriage == carriage) }
-    fn clear(&mut self) { self.storage = single_array_storage!(N) }
+    #[inline] fn get_ref(&self, carriage: Self::Step) -> Option<&RouteBox<Self::Step, Self::Rule>> { self.storage.iter().flatten().find(|r| r.carriage == carriage) }
+
+    #[inline] fn get_mut(&mut self, carriage: Self::Step) -> Option<&mut RouteBox<Self::Step, Self::Rule>> { self.storage.iter_mut().flatten().find(|r| r.carriage == carriage) }
+
+    #[inline] fn contains(&self, carriage: Self::Step) -> bool { self.storage.iter().flatten().any(|r| r.carriage == carriage) }
+
+    #[inline] fn clear(&mut self) { self.storage = single_array_storage!(N) }
 }
 
 #[cfg(test)]

@@ -15,20 +15,27 @@ pub enum PurrRuleLite {
 }
 
 impl PurrRuleLite {
-    pub fn instant() -> Self { Self::Instant(train_conditions::PurrInstant) }
-    pub fn timer(duration: f32) -> Self { Self::Timer(train_conditions::PurrTimer::new(duration)) }
-    pub fn flag() -> Self { Self::Flag(train_conditions::PurrFlag::new()) }
+    #[inline] pub fn instant() -> Self { Self::Instant(train_conditions::PurrInstant) }
+
+    #[inline] pub fn timer(duration: f32) -> Self { Self::Timer(train_conditions::PurrTimer::new(duration)) }
+
+    #[inline] pub fn flag() -> Self { Self::Flag(train_conditions::PurrFlag::new()) }
 }
 
 pub trait PurrRule: PartialEq + Copy {
     fn is_finished(&self) -> bool;
-    fn as_rule<C: Copy>(&self) -> Option<C> where Self: UnpackRule<C> { self.unpack() }
-    fn as_ref_rule<C: Copy>(&self) -> Option<&C> where Self: UnpackRule<C> { self.unpack_ref() }
-    fn as_mut_rule<C: Copy>(&mut self) -> Option<&mut C> where Self: UnpackRule<C> { self.unpack_mut() }
+
+    #[inline] fn as_rule<C: Copy>(&self) -> Option<C> where Self: UnpackRule<C> { self.unpack() }
+
+    #[inline] fn as_ref_rule<C: Copy>(&self) -> Option<&C> where Self: UnpackRule<C> { self.unpack_ref() }
+
+    #[inline] fn as_mut_rule<C: Copy>(&mut self) -> Option<&mut C> where Self: UnpackRule<C> { self.unpack_mut() }
 }
 
 pub trait UnpackRule<C: Copy> {
     fn unpack(self) -> Option<C>;
+
     fn unpack_ref(&self) -> Option<&C>;
+    
     fn unpack_mut(&mut self) -> Option<&mut C>;
 }
